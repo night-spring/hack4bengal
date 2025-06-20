@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMenu, FiX, FiAlertTriangle, FiTrendingUp, FiActivity, FiDatabase, FiSettings, FiUser, FiLogOut, FiBell, FiSun, FiMoon } from 'react-icons/fi';
-
+import { LineChart,
+  Line,BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -27,6 +28,23 @@ export default function Dashboard() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  const bedForecastData = [
+  { day: "Mon", required: 28 },
+  { day: "Tue", required: 32 },
+  { day: "Wed", required: 18 },
+  { day: "Thu", required: 25 },
+  { day: "Fri", required: 35 },
+]; 
+
+const oxygenUsageData = [
+  { hour: "00", usage: 120 },
+  { hour: "04", usage: 80 },
+  { hour: "08", usage: 300 },
+  { hour: "12", usage: 350 },
+  { hour: "16", usage: 280 },
+  { hour: "20", usage: 390 },
+];
 
   const metrics = {
     beds: {
@@ -92,9 +110,14 @@ export default function Dashboard() {
   };
 
   const navigateTo = (path) => {
-    setActiveTab(path);
-    setSidebarOpen(false); // Close sidebar on mobile after navigation
-  };
+  router.push(`/${path}`);
+  setActiveTab(path);
+  setSidebarOpen(false); // Close sidebar on mobile after navigation
+};
+useEffect(() => {
+  const currentPath = window.location.pathname.replace('/', '') || 'dashboard';
+  setActiveTab(currentPath);
+}, []);
 
   const navigationItems = [
     { id: 'dashboard', label: 'Dashboard', icon: FiActivity, url: "" },
@@ -104,6 +127,12 @@ export default function Dashboard() {
     { id: 'export', label: 'Export', icon: FiDatabase, url: "" },
     { id: 'admin', label: 'Admin', icon: FiSettings, url: "/dashboard/admin" }
   ];
+
+
+   const bgCard = darkMode ? "bg-gray-800" : "bg-white";
+  const textMain = darkMode ? "text-white" : "text-gray-900";
+  const textAxis = darkMode ? "#D1D5DB" : "#4B5563"; // tailwind gray-300 / gray-700
+  const gridColor = darkMode ? "#374151" : "#E5E7EB"; // tailwind gray-700 / gray-200
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
@@ -466,6 +495,7 @@ export default function Dashboard() {
                       <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-1`}>Medicine Stock</h3>
                       <p className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Critical Items</p>
 
+<<<<<<< Updated upstream
                       <div className="space-y-3">
                         <div>
                           <div className={`flex justify-between text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
@@ -495,6 +525,202 @@ export default function Dashboard() {
                               style={{ width: `${(metrics.medicines.antivirals.stock / (metrics.medicines.antivirals.threshold * 1.5)) * 100}%` }}
                             ></div>
                           </div>
+=======
+  {/* Medicine Stock Card */}
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.3 }}
+    whileHover={{ y: -5 }}
+    className={`relative overflow-hidden rounded-xl border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm transition-all duration-300 hover:shadow-md`}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br opacity-10 from-emerald-400 to-green-500"></div>
+    <div className="relative px-5 py-6">
+      <div className="flex items-start">
+        <div className={`flex-shrink-0 p-3 rounded-lg ${darkMode ? 'bg-emerald-600' : 'bg-emerald-100'} shadow-sm`}>
+          <svg className={`h-6 w-6 ${darkMode ? 'text-white' : 'text-emerald-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <div className="ml-4 flex-1">
+          <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-1`}>Medicine Stock</h3>
+          <p className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>Critical Items</p>
+          
+          <div className="space-y-3">
+            <div>
+              <div className={`flex justify-between text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                <span>Antibiotics</span>
+                <span className={`font-medium ${metrics.medicines.antibiotics.stock < metrics.medicines.antibiotics.threshold ? 'text-red-500' : 'text-green-500'}`}>
+                  {metrics.medicines.antibiotics.stock}/{metrics.medicines.antibiotics.threshold}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                <div
+                  className={`h-1.5 rounded-full ${metrics.medicines.antibiotics.stock < metrics.medicines.antibiotics.threshold ? 'bg-gradient-to-r from-red-400 to-pink-500' : 'bg-gradient-to-r from-emerald-400 to-green-500'}`}
+                  style={{ width: `${(metrics.medicines.antibiotics.stock / (metrics.medicines.antibiotics.threshold * 1.5)) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className={`flex justify-between text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+                <span>Antivirals</span>
+                <span className={`font-medium ${metrics.medicines.antivirals.stock < metrics.medicines.antivirals.threshold ? 'text-red-500' : 'text-green-500'}`}>
+                  {metrics.medicines.antivirals.stock}/{metrics.medicines.antivirals.threshold}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                <div
+                  className={`h-1.5 rounded-full ${metrics.medicines.antivirals.stock < metrics.medicines.antivirals.threshold ? 'bg-gradient-to-r from-red-400 to-pink-500' : 'bg-gradient-to-r from-emerald-400 to-green-500'}`}
+                  style={{ width: `${(metrics.medicines.antivirals.stock / (metrics.medicines.antivirals.threshold * 1.5)) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+
+  {/* Patients Card */}
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.4 }}
+    whileHover={{ y: -5 }}
+    className={`relative overflow-hidden rounded-xl border ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-sm transition-all duration-300 hover:shadow-md`}
+  >
+    <div className="absolute inset-0 bg-gradient-to-br opacity-10 from-purple-400 to-indigo-500"></div>
+    <div className="relative px-5 py-6">
+      <div className="flex items-start">
+        <div className={`flex-shrink-0 p-3 rounded-lg ${darkMode ? 'bg-purple-600' : 'bg-purple-100'} shadow-sm`}>
+          <svg className={`h-6 w-6 ${darkMode ? 'text-white' : 'text-purple-700'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <div className="ml-4 flex-1">
+          <h3 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-500'} mb-1`}>Patients</h3>
+          <p className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} mb-2`}>
+            {metrics.patients.total}
+          </p>
+          <div className={`flex justify-between text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+            <span className="flex items-center">
+              <span className={`w-2 h-2 rounded-full mr-1 ${darkMode ? 'bg-green-400' : 'bg-green-600'}`}></span>
+              Admissions: {metrics.patients.admissions}
+            </span>
+            <span className="flex items-center">
+              <span className={`w-2 h-2 rounded-full mr-1 ${darkMode ? 'bg-blue-400' : 'bg-blue-600'}`}></span>
+              Discharges: {metrics.patients.discharges}
+            </span>
+          </div>
+          <div>
+            <div className={`flex justify-between text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
+              <span>Waiting Patients</span>
+              <span className={`font-medium ${metrics.patients.waiting > 10 ? 'text-amber-500' : 'text-green-500'}`}>
+                {metrics.patients.waiting}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+              <div
+                className="bg-gradient-to-r from-purple-400 to-indigo-500 h-1.5 rounded-full"
+                style={{ width: `${Math.min((metrics.patients.waiting / 20) * 100, 100)}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+</div>
+
+              {/* Charts and Predictions */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.5 }}
+      className={`p-6 rounded-lg shadow lg:col-span-2 transition-all duration-300 hover:shadow-lg ${bgCard}`}
+    >
+      <h2 className={`text-lg font-semibold mb-4 ${textMain}`}>Bed Requirement Forecast (Next 5 Days)</h2>
+
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={bedForecastData}>
+            <CartesianGrid stroke={gridColor} strokeDasharray="3 3" />
+            <XAxis dataKey="day" stroke={textAxis} />
+            <YAxis stroke={textAxis} domain={[0, 40]} />
+            <Tooltip
+              contentStyle={{ backgroundColor: darkMode ? "#1F2937" : "#ffffff", borderColor: gridColor }}
+              labelStyle={{ color: textAxis }}
+              itemStyle={{ color: darkMode ? "#67E8F9" : "#0891B2" }}
+            />
+            <Bar
+              dataKey="required"
+              fill={darkMode ? "#22D3EE" : "#06B6D4"}
+              radius={[4, 4, 0, 0]}
+              animationDuration={500}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </motion.div>
+
+                 <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.6 }}
+      className={`p-6 rounded-xl shadow transition-all duration-300 hover:shadow-lg ${bgCard}`}
+    >
+      <h2 className={`text-lg font-semibold mb-4 ${textMain}`}>Oxygen Usage Pattern</h2>
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={oxygenUsageData}>
+            <CartesianGrid stroke={gridColor} strokeDasharray="4 4" />
+            <XAxis dataKey="hour" stroke={textAxis} />
+            <YAxis domain={[0, 400]} stroke={textAxis} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: darkMode ? "#1F2937" : "#ffffff",
+                borderColor: gridColor,
+              }}
+              labelStyle={{ color: textAxis }}
+              itemStyle={{ color: darkMode ? "#FBBF24" : "#D97706" }}
+            />
+            <Line
+              type="monotone"
+              dataKey="usage"
+              stroke={darkMode ? "#FBBF24" : "#D97706"}
+              strokeWidth={3}
+              activeDot={{ r: 6 }}
+              dot={{ r: 3 }}
+              animationDuration={500}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </motion.div>
+              </div>
+
+              {/* AI Summary and Recent Alerts */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className={`p-6 rounded-lg shadow lg:col-span-2 transition-all duration-300 hover:shadow-lg ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+                >
+                  <h2 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>AI Resource Summary</h2>
+                  <div className="space-y-4">
+                    {aiSummary.map((item, index) => (
+                      <div key={index} className="flex">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <div className="ml-3">
+                          <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{item}</p>
+>>>>>>> Stashed changes
                         </div>
                       </div>
                     </div>
