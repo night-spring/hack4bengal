@@ -25,6 +25,7 @@ export default function SignupPage() {
     }));
   };
 
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
