@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef } from 'react';
 import Head from 'next/head';
-import { FiUpload, FiCamera, FiInfo, FiCheckCircle, FiXCircle, FiEdit2 } from 'react-icons/fi';
+import { FiUpload, FiCamera, FiInfo, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 export default function AppPage() {
   const [image, setImage] = useState(null);
@@ -18,21 +18,20 @@ export default function AppPage() {
   });
   const fileInputRef = useRef(null);
   const [step, setStep] = useState(1); // 1: upload, 2: form, 3: results
-  const [inputMethod, setInputMethod] = useState('image'); // Added state for inputMethod
-  const [description, setDescription] = useState(''); // Added state for description
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       setImage(file);
       setPreview(URL.createObjectURL(file));
+      // Simulate ML classification
       setIsLoading(true);
       setTimeout(() => {
         const mockResults = {
           wasteType: getRandomWasteType(),
-          confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
+          confidence: (Math.random() * 0.5 + 0.5).toFixed(2), // 50-100% confidence
           quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-          estimatedValue: Math.floor(Math.random() * 5000) + 1000
+          estimatedValue: Math.floor(Math.random() * 5000) + 1000 // ₹1000-6000
         };
         setClassificationResult(mockResults);
         setFormData(prev => ({
@@ -41,7 +40,7 @@ export default function AppPage() {
           quality: mockResults.quality
         }));
         setIsLoading(false);
-        setStep(2);
+        setStep(2); // Move to form step
       }, 1500);
     }
   };
@@ -62,26 +61,6 @@ export default function AppPage() {
     return types[Math.floor(Math.random() * types.length)];
   };
 
-  const handleDescriptionSubmit = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const mockResults = {
-        wasteType: getRandomWasteType(),
-        confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-        quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-        estimatedValue: Math.floor(Math.random() * 5000) + 1000
-      };
-      setClassificationResult(mockResults);
-      setFormData(prev => ({
-        ...prev,
-        wasteType: mockResults.wasteType,
-        quality: mockResults.quality
-      }));
-      setIsLoading(false);
-      setStep(2);
-    }, 1500);
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -93,9 +72,10 @@ export default function AppPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsLoading(true);
+    // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      setStep(3);
+      setStep(3); // Move to results step
     }, 1000);
   };
 
@@ -111,25 +91,17 @@ export default function AppPage() {
       pickupPreference: '',
       additionalNotes: ''
     });
-    setDescription(''); // Reset description
     setStep(1);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-100 to-green-50">
+    <div className="min-h-screen bg-gray-50">
       <Head>
         <title>AgriLink | Waste Upload</title>
       </Head>
 
-      {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden -z-10">
-        <div className="absolute top-0 left-1/4 w-32 h-32 rounded-full bg-green-200 opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full bg-yellow-200 opacity-20 animate-blob animation-delay-4000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-40 h-40 rounded-full bg-orange-200 opacity-20 animate-blob"></div>
-      </div>
-
       {/* Navigation */}
-      <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
+      <nav className="bg-green-800 text-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
@@ -137,7 +109,7 @@ export default function AppPage() {
                 <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
-                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
+                <span className="ml-2 text-xl font-bold">AgriLink</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -152,22 +124,22 @@ export default function AppPage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden" data-aos="fade-up">
+        <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {/* Progress Steps */}
           <div className="border-b border-gray-200">
             <div className="flex justify-between px-8 py-4">
-              <div className={`flex flex-col items-center ${step >= 1 ? 'text-green-600' : 'text-gray-400'}`} data-aos="fade-up" data-aos-delay="100">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-green-100 border-2 border-green-600' : 'bg-gray-100 border-2 border-gray-300'} transition-all duration-300`}>
+              <div className={`flex flex-col items-center ${step >= 1 ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-green-100 border-2 border-green-600' : 'bg-gray-100 border-2 border-gray-300'}`}>
                   {step > 1 ? (
                     <FiCheckCircle className="h-5 w-5" />
                   ) : (
                     <span>1</span>
                   )}
                 </div>
-                <span className="mt-2 text-sm font-medium">Upload/Describe</span>
+                <span className="mt-2 text-sm font-medium">Upload Waste</span>
               </div>
-              <div className={`flex flex-col items-center ${step >= 2 ? 'text-green-600' : 'text-gray-400'}`} data-aos="fade-up" data-aos-delay="200">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-green-100 border-2 border-green-600' : 'bg-gray-100 border-2 border-gray-300'} transition-all duration-300`}>
+              <div className={`flex flex-col items-center ${step >= 2 ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step >= 2 ? 'bg-green-100 border-2 border-green-600' : 'bg-gray-100 border-2 border-gray-300'}`}>
                   {step > 2 ? (
                     <FiCheckCircle className="h-5 w-5" />
                   ) : (
@@ -176,126 +148,77 @@ export default function AppPage() {
                 </div>
                 <span className="mt-2 text-sm font-medium">Details</span>
               </div>
-              <div className={`flex flex-col items-center ${step >= 3 ? 'text-green-600' : 'text-gray-400'}`} data-aos="fade-up" data-aos-delay="300">
-                <div className={`${step >= 3 ? 'bg-green-100 border-2 border-green-600' : 'bg-gray-100 border-2 border-gray-300'} h-10 w-10 rounded-full flex items-center justify-center transition-all duration-300`}>
+              <div className={`flex flex-col items-center ${step >= 3 ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${step >= 3 ? 'bg-green-100 border-2 border-green-600' : 'bg-gray-100 border-2 border-gray-300'}`}>
                   <span>3</span>
                 </div>
-
                 <span className="mt-2 text-sm font-medium">Results</span>
               </div>
             </div>
           </div>
 
-          {/* Step 1: Image Upload or Description */}
+          {/* Step 1: Image Upload */}
           {step === 1 && (
-            <div className="p-8" data-aos="fade-up">
+            <div className="p-8">
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-800">Upload or Describe Waste</h2>
+                <h2 className="text-2xl font-bold text-gray-800">Upload Agricultural Waste</h2>
                 <p className="mt-2 text-gray-600">
-                  Upload a photo or provide a description of your agricultural waste for AI classification
+                  Take a photo or upload an image of your agricultural waste for AI classification
                 </p>
               </div>
 
-              <div className="mt-6 flex justify-center space-x-4">
-                <button
-                  onClick={() => setInputMethod('image')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'image' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                  Upload Image
-                </button>
-                <button
-                  onClick={() => setInputMethod('text')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'text' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                  Describe Waste
-                </button>
-              </div>
-
               <div className="mt-8 flex flex-col items-center">
-                {inputMethod === 'image' ? (
-                  <>
-                    {preview ? (
-                      <div className="relative" data-aos="zoom-in">
-                        <img
-                          src={preview}
-                          alt="Waste preview"
-                          className="h-64 w-full object-cover rounded-lg border-2 border-dashed border-green-300"
-                        />
-                        {isLoading && (
-                          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-lg">
-                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div
-                        className="h-64 w-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-green-400 transition-colors duration-300 group"
-                        onClick={() => fileInputRef.current.click()}
-                        data-aos="fade-up"
-                        data-aos-delay="100"
-                      >
-                        <FiUpload className="h-12 w-12 text-gray-400 group-hover:text-green-500 transition-colors duration-300" />
-                        <p className="mt-2 text-gray-600">Click to upload or drag and drop</p>
-                        <p className="text-sm text-gray-500">JPG, PNG up to 5MB</p>
+                {preview ? (
+                  <div className="relative">
+                    <img 
+                      src={preview} 
+                      alt="Waste preview" 
+                      className="h-64 w-full object-cover rounded-lg border-2 border-dashed border-green-300"
+                    />
+                    {isLoading && (
+                      <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-lg">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
                       </div>
                     )}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleImageUpload}
-                      accept="image/*"
-                      className="hidden"
-                    />
-                    <div className="mt-6">
-                      <button
-                        onClick={() => fileInputRef.current.click()}
-                        className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
-                        data-aos="fade-up"
-                        data-aos-delay="200"
-                      >
-                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                        <FiCamera className="mr-2 inline" />
-                        {preview ? 'Take Another Photo' : 'Take Photo'}
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="w-full max-w-md" data-aos="fade-up" data-aos-delay="100">
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full h-40 p-4 border-2 border-gray-300 rounded-lg bg-white text-black focus:ring-green-500 focus:border-green-500 transition-all duration-300"
-                      placeholder="Describe your agricultural waste (e.g., type, condition, approximate quantity)..."
-                    />
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={handleDescriptionSubmit}
-                        className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300 disabled:opacity-50"
-                        disabled={!description.trim() || isLoading}
-                        data-aos="fade-up"
-                        data-aos-delay="200"
-                      >
-                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                        <FiEdit2 className="mr-2 inline" />
-                        {isLoading ? 'Processing...' : 'Submit Description'}
-                      </button>
-                    </div>
                   </div>
-
-
+                ) : (
+                  <div 
+                    className="h-64 w-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-green-400 transition-colors"
+                    onClick={() => fileInputRef.current.click()}
+                  >
+                    <FiUpload className="h-12 w-12 text-gray-400" />
+                    <p className="mt-2 text-gray-600">Click to upload or drag and drop</p>
+                    <p className="text-sm text-gray-500">JPG, PNG up to 5MB</p>
+                  </div>
                 )}
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div className="mt-6">
+                  <button
+                    onClick={() => fileInputRef.current.click()}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <FiCamera className="mr-2" />
+                    {preview ? 'Take Another Photo' : 'Take Photo'}
+                  </button>
+                </div>
               </div>
 
-              <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded" data-aos="fade-up" data-aos-delay="300">
+              <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <FiInfo className="h-5 w-5 text-yellow-400" />
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-yellow-700">
-                      {inputMethod === 'image'
-                        ? 'For best results: Take clear photos in daylight, showing the waste pile from multiple angles if possible.'
-                        : 'Provide detailed information about the waste type, condition, and quantity for accurate classification.'}
+                      For best results: Take clear photos in daylight, showing the waste pile from multiple angles if possible.
                     </p>
                   </div>
                 </div>
@@ -305,7 +228,7 @@ export default function AppPage() {
 
           {/* Step 2: Waste Details Form */}
           {step === 2 && (
-            <div className="p-8" data-aos="fade-up">
+            <div className="p-8">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-800">Waste Details</h2>
                 <p className="mt-2 text-gray-600">
@@ -315,8 +238,9 @@ export default function AppPage() {
 
               <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Left Column - AI Results */}
-                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 transform transition-all duration-300 hover:scale-105" data-aos="fade-right">
+                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                   <h3 className="text-lg font-medium text-gray-800 mb-4">AI Classification Results</h3>
+                  
                   {classificationResult && (
                     <div className="space-y-4">
                       <div>
@@ -346,18 +270,19 @@ export default function AppPage() {
                         </p>
                       </div>
                       <div className="pt-4 border-t border-gray-200">
-                        <button
+                        <button 
                           onClick={() => setStep(1)}
-                          className="text-sm text-green-600 hover:text-green-800 font-medium transition-colors duration-300"
+                          className="text-sm text-green-600 hover:text-green-800 font-medium"
                         >
-                          Re-upload or re-describe
+                          Re-upload image
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4" data-aos="fade-left">
-                  {/* Waste Type */}
+
+                {/* Right Column - Form */}
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label htmlFor="wasteType" className="block text-sm font-medium text-gray-700">
                       Waste Type
@@ -367,7 +292,7 @@ export default function AppPage() {
                       name="wasteType"
                       value={formData.wasteType}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 bg-white text-black rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm transition-all duration-300"
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
                       required
                     >
                       <option value="">Select waste type</option>
@@ -384,7 +309,6 @@ export default function AppPage() {
                     </select>
                   </div>
 
-                  {/* Quantity */}
                   <div>
                     <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
                       Quantity (in tons)
@@ -397,13 +321,12 @@ export default function AppPage() {
                       step="0.1"
                       value={formData.quantity}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full shadow-sm sm:text-sm border border-gray-300 bg-white text-black rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                      className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-green-500 focus:border-green-500 border-gray-300 rounded-md"
                       placeholder="e.g. 2.5"
                       required
                     />
                   </div>
 
-                  {/* Quality */}
                   <div>
                     <label htmlFor="quality" className="block text-sm font-medium text-gray-700">
                       Quality
@@ -413,7 +336,7 @@ export default function AppPage() {
                       name="quality"
                       value={formData.quality}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 bg-white text-black rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm transition-all duration-300"
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
                       required
                     >
                       <option value="">Select quality</option>
@@ -423,7 +346,6 @@ export default function AppPage() {
                     </select>
                   </div>
 
-                  {/* Location */}
                   <div>
                     <label htmlFor="location" className="block text-sm font-medium text-gray-700">
                       Location (Nearest Landmark)
@@ -434,13 +356,12 @@ export default function AppPage() {
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full shadow-sm sm:text-sm border border-gray-300 bg-white text-black rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                      className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-green-500 focus:border-green-500 border-gray-300 rounded-md"
                       placeholder="e.g. Near Krishi Farm, Pune Highway"
                       required
                     />
                   </div>
 
-                  {/* Pickup Preference */}
                   <div>
                     <label htmlFor="pickupPreference" className="block text-sm font-medium text-gray-700">
                       Pickup Preference
@@ -450,7 +371,7 @@ export default function AppPage() {
                       name="pickupPreference"
                       value={formData.pickupPreference}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 bg-white text-black rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm transition-all duration-300"
+                      className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
                       required
                     >
                       <option value="">Select pickup option</option>
@@ -459,7 +380,6 @@ export default function AppPage() {
                     </select>
                   </div>
 
-                  {/* Additional Notes */}
                   <div>
                     <label htmlFor="additionalNotes" className="block text-sm font-medium text-gray-700">
                       Additional Notes
@@ -470,41 +390,35 @@ export default function AppPage() {
                       rows={3}
                       value={formData.additionalNotes}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full shadow-sm sm:text-sm border border-gray-300 bg-white text-black rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                      className="mt-1 block w-full shadow-sm sm:text-sm focus:ring-green-500 focus:border-green-500 border-gray-300 rounded-md"
                       placeholder="Any special instructions or details about the waste..."
                     />
                   </div>
 
-                  {/* Buttons */}
                   <div className="flex justify-end space-x-4 pt-4">
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
+                      className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     >
                       Back
                     </button>
                     <button
                       type="submit"
-                      className="relative group px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
+                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                       disabled={isLoading}
-                      data-aos="fade-up"
-                      data-aos-delay="100"
                     >
-                      <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
                       {isLoading ? 'Processing...' : 'Submit Waste Listing'}
                     </button>
                   </div>
                 </form>
-
-
               </div>
             </div>
           )}
 
           {/* Step 3: Results */}
           {step === 3 && (
-            <div className="p-8" data-aos="fade-up">
+            <div className="p-8">
               <div className="text-center">
                 <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
                   <FiCheckCircle className="h-6 w-6 text-green-600" />
@@ -515,7 +429,7 @@ export default function AppPage() {
                 </p>
               </div>
 
-              <div className="mt-8 bg-green-50 rounded-lg overflow-hidden shadow transform transition-all duration-300 hover:scale-105" data-aos="fade-up" data-aos-delay="100">
+              <div className="mt-8 bg-green-50 rounded-lg overflow-hidden shadow">
                 <div className="px-6 py-5 border-b border-green-200 bg-green-100">
                   <h3 className="text-lg font-medium text-green-800">Listing Summary</h3>
                 </div>
@@ -539,7 +453,7 @@ export default function AppPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Estimated Value</p>
                     <p className="mt-1 text-sm text-gray-900">
-                      ₹{Math.round(classificationResult.estimatedValue * parseFloat(formData.quantity || 1))}
+                      ₹{Math.round(classificationResult.estimatedValue * parseFloat(formData.quantity || 1))} 
                       <span className="text-gray-500"> (₹{classificationResult.estimatedValue}/ton)</span>
                     </p>
                   </div>
@@ -560,7 +474,7 @@ export default function AppPage() {
                 <h3 className="text-lg font-medium text-gray-900">What Happens Next?</h3>
                 <div className="mt-4 bg-white shadow overflow-hidden sm:rounded-md">
                   <ul className="divide-y divide-gray-200">
-                    <li className="p-4" data-aos="fade-right" data-aos-delay="100">
+                    <li className="p-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                           <span className="text-blue-600">1</span>
@@ -573,7 +487,7 @@ export default function AppPage() {
                         </div>
                       </div>
                     </li>
-                    <li className="p-4" data-aos="fade-right" data-aos-delay="200">
+                    <li className="p-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                           <span className="text-blue-600">2</span>
@@ -586,7 +500,7 @@ export default function AppPage() {
                         </div>
                       </div>
                     </li>
-                    <li className="p-4" data-aos="fade-right" data-aos-delay="300">
+                    <li className="p-4">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                           <span className="text-blue-600">3</span>
@@ -606,18 +520,13 @@ export default function AppPage() {
               <div className="mt-8 flex justify-center space-x-4">
                 <button
                   onClick={resetProcess}
-                  className="relative group px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
-                  data-aos="fade-up"
-                  data-aos-delay="100"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 >
-                  <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
                   List Another Waste
                 </button>
                 <button
-                  onClick={() => {/* Navigate to dashboard */ }}
-                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
-                  data-aos="fade-up"
-                  data-aos-delay="200"
+                  onClick={() => {/* Navigate to dashboard */}}
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 >
                   View Dashboard
                 </button>
