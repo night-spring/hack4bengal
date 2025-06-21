@@ -26,59 +26,59 @@ export default function AppPage() {
     const [description, setDescription] = useState(''); // Added state for description
 
     const handleImageUpload = async (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    setImage(file);
-    setPreview(URL.createObjectURL(file));
-    setIsLoading(true);
+        const file = e.target.files[0];
+        if (file) {
+            setImage(file);
+            setPreview(URL.createObjectURL(file));
+            setIsLoading(true);
 
-    try {
-      // Mock AI classification
-      const mockResults = {
-        wasteType: getRandomWasteType(),
-        confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-        quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-        estimatedValue: Math.floor(Math.random() * 5000) + 1000
-      };
+            try {
+                // Mock AI classification
+                const mockResults = {
+                    wasteType: getRandomWasteType(),
+                    confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
+                    quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
+                    estimatedValue: Math.floor(Math.random() * 5000) + 1000
+                };
 
-      const finalFormData = {
-        ...formData,
-        wasteType: mockResults.wasteType,
-        quality: mockResults.quality,
-        estimatedValue: mockResults.estimatedValue,
-        confidence: mockResults.confidence
-      };
+                const finalFormData = {
+                    ...formData,
+                    wasteType: mockResults.wasteType,
+                    quality: mockResults.quality,
+                    estimatedValue: mockResults.estimatedValue,
+                    confidence: mockResults.confidence
+                };
 
-      // Convert file to base64 for server action
-      const base64Image = await convertFileToBase64(file);
-      
-      // Upload to MongoDB + Supabase
-      const result = await uploadWasteData({
-        formData: finalFormData,
-        imageBase64: base64Image
-      });
+                // Convert file to base64 for server action
+                const base64Image = await convertFileToBase64(file);
 
-      setClassificationResult(mockResults);
-      setFormData(finalFormData);
-      setStep(2);
-    } catch (err) {
-      console.error("Upload failed:", err);
-      alert("Something went wrong while uploading data. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-};
+                // Upload to MongoDB + Supabase
+                const result = await uploadWasteData({
+                    formData: finalFormData,
+                    imageBase64: base64Image
+                });
 
-// Helper function to convert file to base64
-const convertFileToBase64 = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
-};
+                setClassificationResult(mockResults);
+                setFormData(finalFormData);
+                setStep(2);
+            } catch (err) {
+                console.error("Upload failed:", err);
+                alert("Something went wrong while uploading data. Please try again.");
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    // Helper function to convert file to base64
+    const convertFileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    };
     const getRandomWasteType = () => {
         const types = [
             'Rice Straw',
@@ -124,27 +124,27 @@ const convertFileToBase64 = (file) => {
     };
 
     const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
-  
-  try {
-    // Convert image to base64 if it exists
-    const imageBase64 = image ? await convertFileToBase64(image) : null;
-    
-    await uploadWasteInfo({ 
-      classificationResult, 
-      formData,
-      imageBase64 
-    });
-    
-    setStep(3);
-  } catch (err) {
-    console.error("Submission failed:", err);
-    alert("Something went wrong while submitting. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+        e.preventDefault();
+        setIsLoading(true);
+
+        try {
+            // Convert image to base64 if it exists
+            const imageBase64 = image ? await convertFileToBase64(image) : null;
+
+            await uploadWasteInfo({
+                classificationResult,
+                formData,
+                imageBase64
+            });
+
+            setStep(3);
+        } catch (err) {
+            console.error("Submission failed:", err);
+            alert("Something went wrong while submitting. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     function handleFileChange(e) {
         const file = e.target.files?.[0];

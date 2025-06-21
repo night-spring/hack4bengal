@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { FiFilter, FiSearch, FiShoppingCart, FiTrendingUp, FiMapPin, FiClock, FiCheck, FiX, FiDollarSign } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
+
+import {getMockTenders} from "../actions/mongodbfunctions"
 export default function MarketplacePage() {
   // Set page title
   useEffect(() => {
@@ -19,161 +21,43 @@ export default function MarketplacePage() {
   // Mock tender data
   useEffect(() => {
     // Simulate API call
-    setTimeout(() => {
-      const mockTenders = [
-        {
-          id: 1,
-          title: "Rice Straw for Biofuel Production",
-          company: "Green Energy Solutions",
-          wasteType: "Rice Straw",
-          quantity: 500,
-          pricePerTon: 1800,
-          location: "Punjab",
-          deadline: "2023-12-15",
-          status: "open",
-          description: "Requiring high-quality rice straw for biofuel conversion. Must be free from pesticides and stored properly.",
-          requirements: "Moisture content < 15%, Clean and dry, No soil contamination",
-          minOrder: 50,
-          maxOrder: 200
-        },
-        {
-          id: 2,
-          title: "Wheat Straw for Packaging Material",
-          company: "EcoPack Industries",
-          wasteType: "Wheat Straw",
-          quantity: 300,
-          pricePerTon: 2200,
-          location: "Haryana",
-          deadline: "2023-12-20",
-          status: "open",
-          description: "Seeking premium wheat straw for manufacturing eco-friendly packaging materials.",
-          requirements: "Golden color, Length 20-30cm, Minimal impurities",
-          minOrder: 20,
-          maxOrder: 100
-        },
-        {
-          id: 3,
-          title: "Sugarcane Bagasse for Paper Production",
-          company: "PaperCraft Ltd",
-          wasteType: "Sugarcane Bagasse",
-          quantity: 1000,
-          pricePerTon: 1500,
-          location: "Maharashtra",
-          deadline: "2023-12-10",
-          status: "open",
-          description: "Large quantity of sugarcane bagasse needed for paper pulp production.",
-          requirements: "Fresh, Moisture content < 18%, Free from stones",
-          minOrder: 100,
-          maxOrder: 500
-        },
-        {
-          id: 4,
-          title: "Corn Stalks for Animal Feed",
-          company: "AgriFeed Corp",
-          wasteType: "Corn Stalks",
-          quantity: 800,
-          pricePerTon: 1200,
-          location: "Karnataka",
-          deadline: "2023-12-05",
-          status: "closing",
-          description: "Corn stalks required for animal feed production. Must be properly dried and stored.",
-          requirements: "Cut to 15-20cm length, No mold, Dry",
-          minOrder: 50,
-          maxOrder: 200
-        },
-        {
-          id: 5,
-          title: "Cotton Stalks for Biomass Fuel",
-          company: "BioPower Energy",
-          wasteType: "Cotton Stalks",
-          quantity: 700,
-          pricePerTon: 1400,
-          location: "Gujarat",
-          deadline: "2023-12-25",
-          status: "open",
-          description: "Cotton stalks needed for biomass energy production. High calorific value preferred.",
-          requirements: "Diameter < 5cm, Moisture < 20%, Clean",
-          minOrder: 30,
-          maxOrder: 150
-        },
-        {
-          id: 6,
-          title: "Coconut Husks for Coir Products",
-          company: "Coir Innovations",
-          wasteType: "Coconut Husks",
-          quantity: 400,
-          pricePerTon: 2500,
-          location: "Kerala",
-          deadline: "2023-12-18",
-          status: "open",
-          description: "Coconut husks required for high-quality coir fiber production.",
-          requirements: "Fresh, No decomposition, Whole husks",
-          minOrder: 10,
-          maxOrder: 50
-        },
-        {
-          id: 7,
-          title: "Banana Plant Waste for Textiles",
-          company: "FiberTech Global",
-          wasteType: "Banana Plant Waste",
-          quantity: 600,
-          pricePerTon: 2800,
-          location: "Tamil Nadu",
-          deadline: "2023-12-08",
-          status: "closed",
-          description: "Banana plant stems required for sustainable textile fiber production.",
-          requirements: "Fresh stems, Length > 1m, Clean",
-          minOrder: 20,
-          maxOrder: 100
-        },
-        {
-          id: 8,
-          title: "Mustard Stalks for Mushroom Cultivation",
-          company: "Mushroom Farms India",
-          wasteType: "Mustard Stalks",
-          quantity: 350,
-          pricePerTon: 1700,
-          location: "Rajasthan",
-          deadline: "2023-12-22",
-          status: "open",
-          description: "Mustard stalks needed as substrate for mushroom cultivation.",
-          requirements: "Dry, No pesticides, Chopped to 5-10cm",
-          minOrder: 15,
-          maxOrder: 70
-        }
-      ];
-      
+    const a = async () => {
+
+      const mockTenders = await getMockTenders();
+
       setTenders(mockTenders);
       setFilteredTenders(mockTenders);
       setLoading(false);
-    }, 1500);
+    }
+    a();
+
   }, []);
 
   // Filter and search functionality
   useEffect(() => {
     let results = tenders;
-    
+
     // Filter by search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      results = results.filter(tender => 
+      results = results.filter(tender =>
         tender.title.toLowerCase().includes(term) ||
         tender.company.toLowerCase().includes(term) ||
         tender.wasteType.toLowerCase().includes(term) ||
         tender.location.toLowerCase().includes(term)
       );
     }
-    
+
     // Filter by waste type
     if (selectedWasteType !== 'All') {
       results = results.filter(tender => tender.wasteType === selectedWasteType);
     }
-    
+
     // Filter by status tab
     if (activeTab !== 'all') {
       results = results.filter(tender => tender.status === activeTab);
     }
-    
+
     // Sort results
     switch (sortOption) {
       case 'newest':
@@ -191,13 +75,13 @@ export default function MarketplacePage() {
       default:
         break;
     }
-    
+
     setFilteredTenders(results);
   }, [searchTerm, selectedWasteType, sortOption, activeTab, tenders]);
 
   const wasteTypes = [
-    'All', 'Rice Straw', 'Wheat Straw', 'Sugarcane Bagasse', 
-    'Corn Stalks', 'Cotton Stalks', 'Coconut Husks', 
+    'All', 'Rice Straw', 'Wheat Straw', 'Sugarcane Bagasse',
+    'Corn Stalks', 'Cotton Stalks', 'Coconut Husks',
     'Banana Plant Waste', 'Mustard Stalks', 'Paddy Husk'
   ];
 
@@ -219,7 +103,7 @@ export default function MarketplacePage() {
     const deadlineDate = new Date(deadline);
     const diffTime = deadlineDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) return 'Expired';
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Tomorrow';
@@ -240,82 +124,82 @@ export default function MarketplacePage() {
       </div>
 
       {/* Navigation */}
-       <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        {/* Logo */}
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 flex items-center">
-                                <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
-                            </div>
-                        </div>
+      <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            {/* Logo */}
+            <div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center">
+                <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
+              </div>
+            </div>
 
-                        {/* Navigation Tabs */}
-                        <div className="hidden md:block">
-                            <div className="flex items-center space-x-8">
-                                <a href="/app" className="px-1 py-2 border-b-2 border-green-500 text-sm font-medium text-white">
-                                    App
-                                </a>
-                                <a href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    Marketplace
-                                </a>
-                                <a href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    Portfolio
-                                </a>
-                                <a href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    CO2 Saved
-                                </a>
-                            </div>
-                        </div>
+            {/* Navigation Tabs */}
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-8">
+                <a href="/app" className="px-1 py-2 border-b-2 border-green-500 text-sm font-medium text-white">
+                  App
+                </a>
+                <a href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                  Marketplace
+                </a>
+                <a href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                  Portfolio
+                </a>
+                <a href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                  CO2 Saved
+                </a>
+              </div>
+            </div>
 
-                        {/* User Profile */}
-                        <div className="flex items-center space-x-4">
-                            <div className="hidden md:block">
-                                <span className="text-green-200">Welcome, Farmer</span>
-                            </div>
-                            <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center cursor-pointer hover:bg-green-500 transition-colors duration-300">
-                                <span className="text-sm font-medium text-white">F</span>
-                            </div>
-                        </div>
+            {/* User Profile */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden md:block">
+                <span className="text-green-200">Welcome, Farmer</span>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center cursor-pointer hover:bg-green-500 transition-colors duration-300">
+                <span className="text-sm font-medium text-white">F</span>
+              </div>
+            </div>
 
-                        {/* Mobile menu button */}
-                        <div className="md:hidden flex items-center">
-                            <button
-                                type="button"
-                                className="inline-flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-700 focus:outline-none"
-                                aria-controls="mobile-menu"
-                                aria-expanded="false"
-                            >
-                                <span className="sr-only">Open main menu</span>
-                                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-700 focus:outline-none"
+                aria-controls="mobile-menu"
+                aria-expanded="false"
+              >
+                <span className="sr-only">Open main menu</span>
+                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
 
-                {/* Mobile menu */}
-                <div className="md:hidden hidden" id="mobile-menu">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700 bg-opacity-90">
-                        <a href="/app" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-green-800">
-                            App
-                        </a>
-                        <a href="/marketplace" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            Marketplace
-                        </a>
-                        <a href="/portfolio" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            Portfolio
-                        </a>
-                        <a href="/carbon" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            CO2 Saved
-                        </a>
-                    </div>
-                </div>
-            </nav>
+        {/* Mobile menu */}
+        <div className="md:hidden hidden" id="mobile-menu">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700 bg-opacity-90">
+            <a href="/app" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-green-800">
+              App
+            </a>
+            <a href="/marketplace" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
+              Marketplace
+            </a>
+            <a href="/portfolio" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
+              Portfolio
+            </a>
+            <a href="/carbon" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
+              CO2 Saved
+            </a>
+          </div>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-green-700 to-green-900 text-white">
@@ -351,7 +235,7 @@ export default function MarketplacePage() {
                       <p className="text-2xl font-bold">₹1,850 / ton</p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="flex justify-between items-center pb-2 border-b border-green-700">
                       <span className="text-green-200">Rice Straw</span>
@@ -414,7 +298,7 @@ export default function MarketplacePage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className="flex space-x-4">
               <div className="relative">
                 <select
@@ -431,7 +315,7 @@ export default function MarketplacePage() {
                   <FiFilter />
                 </div>
               </div>
-              
+
               <div className="relative">
                 <select
                   className="appearance-none block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-all duration-300"
@@ -450,7 +334,7 @@ export default function MarketplacePage() {
               </div>
             </div>
           </div>
-          
+
           {/* Status Tabs */}
           <div className="mt-6 flex space-x-4 border-b border-gray-200">
             <button
@@ -487,9 +371,9 @@ export default function MarketplacePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTenders.map(tender => (
-              <div 
-                key={tender.id} 
+            {filteredTenders.map((tender,index) => (
+              <div
+                key={index}
                 className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
               >
                 <div className="p-6">
@@ -505,7 +389,7 @@ export default function MarketplacePage() {
                       {tender.wasteType}
                     </div>
                   </div>
-                  
+
                   <div className="mt-6 grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Quantity</p>
@@ -530,7 +414,7 @@ export default function MarketplacePage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-6">
                     <p className="text-sm text-gray-500 mb-2">Requirements:</p>
                     <ul className="space-y-1 text-sm">
@@ -542,18 +426,17 @@ export default function MarketplacePage() {
                       ))}
                     </ul>
                   </div>
-                  
+
                   <div className="mt-8 flex justify-between items-center">
                     <div>
                       <p className="text-xs text-gray-500">Order Range</p>
                       <p className="text-sm font-medium">{tender.minOrder} - {tender.maxOrder} tons</p>
                     </div>
-                    <button 
-                      className={`px-4 py-2 rounded-lg font-medium flex items-center ${
-                        tender.status === 'closed' 
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
-                          : 'bg-green-600 text-white hover:bg-green-700 transition-colors duration-300'
-                      }`}
+                    <button
+                      className={`px-4 py-2 rounded-lg font-medium flex items-center ${tender.status === 'closed'
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700 transition-colors duration-300'
+                        }`}
                       disabled={tender.status === 'closed'}
                     >
                       <FiShoppingCart className="mr-2" />
@@ -575,7 +458,7 @@ export default function MarketplacePage() {
             <p className="mt-2 text-gray-500">
               Try adjusting your search or filter criteria
             </p>
-            <button 
+            <button
               className="mt-6 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
               onClick={() => {
                 setSearchTerm('');
@@ -591,7 +474,7 @@ export default function MarketplacePage() {
         {/* How It Works Section */}
         <div className="mt-16 bg-white rounded-xl shadow-lg p-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">How the Marketplace Works</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center p-6 bg-green-50 rounded-lg border border-green-100">
               <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100 text-green-600 mb-4">
@@ -602,7 +485,7 @@ export default function MarketplacePage() {
                 Browse industrial tenders looking for agricultural waste materials
               </p>
             </div>
-            
+
             <div className="text-center p-6 bg-yellow-50 rounded-lg border border-yellow-100">
               <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600 mb-4">
                 <span className="text-2xl font-bold">2</span>
@@ -612,7 +495,7 @@ export default function MarketplacePage() {
                 Place competitive bids for your available agricultural waste
               </p>
             </div>
-            
+
             <div className="text-center p-6 bg-blue-50 rounded-lg border border-blue-100">
               <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 mb-4">
                 <span className="text-2xl font-bold">3</span>
@@ -641,7 +524,7 @@ export default function MarketplacePage() {
                 Connecting farmers with industries to transform agricultural waste into valuable resources.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-green-200">
@@ -651,7 +534,7 @@ export default function MarketplacePage() {
                 <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-green-200">
@@ -661,16 +544,16 @@ export default function MarketplacePage() {
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Stay Connected</h3>
               <p className="text-green-200 mb-4">
                 Subscribe to get the latest tenders and market updates
               </p>
               <div className="flex">
-                <input 
-                  type="email" 
-                  placeholder="Your email" 
+                <input
+                  type="email"
+                  placeholder="Your email"
                   className="px-4 py-2 w-full rounded-l-lg focus:outline-none text-gray-800"
                 />
                 <button className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-r-lg transition-colors">
@@ -679,7 +562,7 @@ export default function MarketplacePage() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-12 pt-8 border-t border-green-800 text-center text-green-300">
             <p>© 2023 AgriLink. All rights reserved.</p>
           </div>

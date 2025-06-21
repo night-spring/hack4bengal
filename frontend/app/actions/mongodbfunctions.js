@@ -42,11 +42,11 @@ function base64ToBlob(base64Data) {
   const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
   const ab = new ArrayBuffer(byteString.length);
   const ia = new Uint8Array(ab);
-  
+
   for (let i = 0; i < byteString.length; i++) {
     ia[i] = byteString.charCodeAt(i);
   }
-  
+
   return new Blob([ab], { type: mimeString });
 }
 
@@ -110,7 +110,7 @@ export async function uploadWasteData({ formData, imageBase64 }) {
 export async function uploadWasteInfo({ classificationResult, formData, imageBase64 = null }) {
   try {
     let imageUploadResult = null;
-    
+
     if (imageBase64) {
       imageUploadResult = await uploadWasteImage(imageBase64);
     }
@@ -133,4 +133,12 @@ export async function uploadWasteInfo({ classificationResult, formData, imageBas
     console.error("Error in uploadWasteInfo:", error);
     throw error;
   }
+}
+
+
+export async function getMockTenders() {
+  return withCollection("marketplaceWasteData", async (mockTenderCollection) => {
+    const result = await mockTenderCollection.find({}).toArray();
+    return JSON.parse(JSON.stringify(result));
+  });
 }
