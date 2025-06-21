@@ -1,11 +1,15 @@
 'use client'
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import Link from 'next/link';
+import { useUser } from '@civic/auth/react';
+import { LoaderCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   useEffect(() => {
     AOS.init({
       duration: 800,
@@ -13,6 +17,15 @@ export default function Home() {
       mirror: true
     });
   }, []);
+
+  const { user, signIn, signOut } = useUser();
+  const [signinBtnLoading, setSigninbtnLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setSigninbtnLoading(false);
+    }
+  }, [user])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-100 to-green-50">
@@ -34,20 +47,36 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
-              </div>
+              <Link href="/">
+                <div className="flex-shrink-0 flex items-center">
+                  <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
+                </div>
+              </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-6">
               <a href="#features" className="text-green-100 hover:text-white px-3 py-2 text-sm font-medium transition-colors duration-300">Features</a>
               <a href="#how-it-works" className="text-green-100 hover:text-white px-3 py-2 text-sm font-medium transition-colors duration-300">How It Works</a>
               <a href="#testimonials" className="text-green-100 hover:text-white px-3 py-2 text-sm font-medium transition-colors duration-300">Testimonials</a>
-              <button className="relative overflow-hidden group inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-green-800 bg-green-300 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300">
+              <button className="relative overflow-hidden group inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-green-800 bg-green-300 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300" onClick={() => {
+                if (user) {
+                  signOut();
+                }
+                else {
+                  setSigninbtnLoading(true);
+                  signIn();
+                }
+              }}>
                 <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                Get Started
+                {signinBtnLoading==false ? <>
+                  {user ? <>Log out</> : <>
+                    Get Started
+                  </>}
+                </> :
+                  <LoaderCircle size={20} className='animate-spin' />
+                }
               </button>
             </div>
           </div>
@@ -70,14 +99,24 @@ export default function Home() {
                 <div className="mt-8 sm:flex sm:justify-center lg:justify-start space-y-3 sm:space-y-0 sm:space-x-4" data-aos="fade-right" data-aos-delay="400">
                   <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-green-400 to-green-600 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-200"></div>
-                   <Link href="/app">
-  <button className="relative px-6 py-3 bg-green-600 text-white rounded-lg leading-none flex items-center">
-    <span className="font-medium">Start Selling Waste</span>
-    <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-    </svg>
-  </button>
-</Link>
+                    <Link href="/app">
+                      <button className="relative px-6 py-3 bg-green-600 text-white rounded-lg leading-none flex  items-center" onClick={() => {
+                        if (!user) {
+                          setSigninbtnLoading(true);
+                          signIn()
+                        }
+                        else {
+                          router.push("/app");
+                        }
+                      }}>
+                        {signinBtnLoading == false ? (<>
+                          <span className="font-medium">{user ? <>Start Selling Waste</> : <>Be a member</>}</span>
+                          <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                          </svg>
+                        </>) : <LoaderCircle size={20} className='animate-spin' />}
+                      </button>
+                    </Link>
                   </div>
                   <button className="px-6 py-3 border border-green-600 text-green-700 rounded-lg hover:bg-green-50 transition-colors duration-300 flex items-center">
                     <svg className="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +156,7 @@ export default function Home() {
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
             {/* Feature 1 */}
-            <div 
+            <div
               className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-green-100 hover:border-green-200"
               data-aos="flip-up"
               data-aos-delay="100"
@@ -135,7 +174,7 @@ export default function Home() {
             </div>
 
             {/* Feature 2 */}
-            <div 
+            <div
               className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-green-100 hover:border-green-200"
               data-aos="flip-up"
               data-aos-delay="200"
@@ -152,7 +191,7 @@ export default function Home() {
             </div>
 
             {/* Feature 3 */}
-            <div 
+            <div
               className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-green-100 hover:border-green-200"
               data-aos="flip-up"
               data-aos-delay="300"
@@ -169,7 +208,7 @@ export default function Home() {
             </div>
 
             {/* Feature 4 */}
-            <div 
+            <div
               className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-green-100 hover:border-green-200"
               data-aos="flip-up"
               data-aos-delay="400"
@@ -347,7 +386,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
             {/* Testimonial 1 */}
-            <div 
+            <div
               className="bg-gradient-to-br from-green-50 to-white p-8 rounded-xl shadow-lg border border-green-100 hover:shadow-xl transition-shadow duration-300"
               data-aos="fade-up"
               data-aos-delay="100"
@@ -372,7 +411,7 @@ export default function Home() {
             </div>
 
             {/* Testimonial 2 */}
-            <div 
+            <div
               className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-lg border border-blue-100 hover:shadow-xl transition-shadow duration-300"
               data-aos="fade-up"
               data-aos-delay="200"
@@ -397,7 +436,7 @@ export default function Home() {
             </div>
 
             {/* Testimonial 3 */}
-            <div 
+            <div
               className="bg-gradient-to-br from-purple-50 to-white p-8 rounded-xl shadow-lg border border-purple-100 hover:shadow-xl transition-shadow duration-300"
               data-aos="fade-up"
               data-aos-delay="300"
@@ -439,7 +478,8 @@ export default function Home() {
             Join thousands of farmers already benefiting from AgriLink's smart marketplace.
           </p>
           <div className="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-up" data-aos-delay="200">
-            <button className="relative group px-6 py-3 bg-white text-green-800 font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <button className="relative group px-6 py-3 bg-white text-green-800 font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+            >
               <span className="relative z-10">Get Started - It's Free</span>
               <span className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
             </button>

@@ -1,5 +1,6 @@
 'use client';
 import { useUser, UserButton } from '@civic/auth/react';
+import { useEffect } from 'react';
 
 
 export default function LoginPage() {
@@ -7,7 +8,9 @@ export default function LoginPage() {
 
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
-
+  useEffect(() => { 
+    console.log(user)
+  }, [user])
   return (
     <div className="p-6 max-w-md mx-auto">
       <h1 className="text-2xl font-bold mb-4">Civic Login</h1>

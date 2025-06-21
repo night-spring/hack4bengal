@@ -1,77 +1,103 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useUser } from '@civic/auth/react';
 import { FiFilter, FiSearch, FiDollarSign, FiTrendingUp, FiCalendar, FiPackage, FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { getWasteListingsByUser } from '../actions/mongodbfunctions';
+import Navbar from '../components/Navbar';
 
 export default function PortfolioPage() {
+  const { user } = useUser();
   const [salesData, setSalesData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [stats, setStats] = useState({
     totalSales: 0,
     totalWeight: 0,
     averagePrice: 0,
-    transactions: 0
+    transactions: 0,
   });
 
-  // Mock sales data
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = [
-        { id: 1, item: 'Rice Straw', price: 1850, weight: 120, time: '2023-11-15', status: 'completed' },
-        { id: 2, item: 'Wheat Straw', price: 2200, weight: 85, time: '2023-11-18', status: 'completed' },
-        { id: 3, item: 'Sugarcane Bagasse', price: 1500, weight: 200, time: '2023-11-20', status: 'completed' },
-        { id: 4, item: 'Corn Stalks', price: 1200, weight: 150, time: '2023-11-22', status: 'completed' },
-        { id: 5, item: 'Cotton Stalks', price: 1400, weight: 95, time: '2023-11-25', status: 'completed' },
-        { id: 6, item: 'Coconut Husks', price: 2500, weight: 60, time: '2023-11-28', status: 'completed' },
-        { id: 7, item: 'Banana Plant Waste', price: 2800, weight: 75, time: '2023-12-01', status: 'completed' },
-        { id: 8, item: 'Mustard Stalks', price: 1700, weight: 110, time: '2023-12-05', status: 'completed' },
-        { id: 9, item: 'Paddy Husk', price: 1350, weight: 180, time: '2023-12-08', status: 'completed' },
-        { id: 10, item: 'Rice Straw', price: 1900, weight: 100, time: '2023-12-12', status: 'completed' },
-        { id: 11, item: 'Wheat Straw', price: 2300, weight: 90, time: '2023-12-15', status: 'pending' },
-        { id: 12, item: 'Sugarcane Bagasse', price: 1550, weight: 170, time: '2023-12-18', status: 'pending' },
-      ];
-      
-      setSalesData(mockData);
-      setFilteredData(mockData);
-      
+  // Fetch sales data for the logged-in user
+  const fetchUserSales = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    try {
+      // Fetch waste listings for the logged-in user
+      const sales = await getWasteListingsByUser(user.id);
+
+      // Transform data to match the portfolio display format
+      const transformedSales = sales.map(sale => ({
+        id: sale._id.toString(),
+        item: sale.cropType || 'Agricultural Waste',
+        price: sale.classificationResult?.estimatedValue || 0,
+        weight: parseFloat(sale.quantity) || 0,
+        quantityUnit: sale.quantityUnit || 'kg',
+        time: sale.createdAt || new Date().toISOString(),
+        status: sale.status || 'pending',
+        imageUrl: sale.imageUrl || null,
+        wasteDescription: sale.wasteDescription || '',
+        moistureLevel: sale.moistureLevel || '',
+        ageOfWaste: sale.ageOfWaste || '',
+        location: sale.location || '',
+        additionalNotes: sale.additionalNotes || '',
+      }));
+
+      setSalesData(transformedSales);
+      setFilteredData(transformedSales);
+
       // Calculate stats
-      const completed = mockData.filter(item => item.status === 'completed');
+      const completed = transformedSales.filter(item => item.status === 'completed');
       const totalSales = completed.reduce((sum, item) => sum + (item.price * item.weight), 0);
       const totalWeight = completed.reduce((sum, item) => sum + item.weight, 0);
       const averagePrice = totalWeight > 0 ? totalSales / totalWeight : 0;
-      
+
       setStats({
         totalSales,
         totalWeight,
         averagePrice,
-        transactions: completed.length
+        transactions: completed.length,
       });
-      
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
+      setSalesData([]);
+      setFilteredData([]);
+      setStats({
+        totalSales: 0,
+        totalWeight: 0,
+        averagePrice: 0,
+        transactions: 0,
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserSales();
+  }, [user?.id]);
 
   // Filter and sort functionality
   useEffect(() => {
     let results = [...salesData];
-    
+
     // Apply search filter
     if (searchTerm) {
-      results = results.filter(item => 
-        item.item.toLowerCase().includes(searchTerm.toLowerCase())
+      results = results.filter(item =>
+        item.item.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.wasteDescription.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Apply status filter
     if (activeFilter !== 'all') {
       results = results.filter(item => item.status === activeFilter);
     }
-    
+
     // Apply sorting
     if (sortConfig.key) {
       results.sort((a, b) => {
@@ -84,7 +110,7 @@ export default function PortfolioPage() {
         return 0;
       });
     }
-    
+
     setFilteredData(results);
   }, [searchTerm, sortConfig, activeFilter, salesData]);
 
@@ -102,7 +128,7 @@ export default function PortfolioPage() {
   };
 
   const getStatusBadge = (status) => {
-    return status === 'completed' 
+    return status === 'completed'
       ? <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Completed</span>
       : <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Pending</span>;
   };
@@ -116,16 +142,32 @@ export default function PortfolioPage() {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const refreshData = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    fetchUserSales();
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Please Log In</h2>
+          <p className="text-gray-600 mb-6">
+            You need to be logged in to view your portfolio.
+          </p>
+          <a
+            href="/login"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Go to Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
@@ -140,84 +182,7 @@ export default function PortfolioPage() {
         <div className="absolute bottom-1/4 left-1/3 w-40 h-40 rounded-full bg-orange-200 opacity-20 animate-blob"></div>
       </div>
 
-      {/* Navigation */}
-      <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        {/* Logo */}
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 flex items-center">
-                                <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
-                            </div>
-                        </div>
-
-                        {/* Navigation Tabs */}
-                        <div className="hidden md:block">
-                            <div className="flex items-center space-x-8">
-                                <a href="/app" className="px-1 py-2 border-b-2 border-green-500 text-sm font-medium text-white">
-                                    App
-                                </a>
-                                <a href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    Marketplace
-                                </a>
-                                <a href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    Portfolio
-                                </a>
-                                <a href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    CO2 Saved
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* User Profile */}
-                        <div className="flex items-center space-x-4">
-                            <div className="hidden md:block">
-                                <span className="text-green-200">Welcome, Farmer</span>
-                            </div>
-                            <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center cursor-pointer hover:bg-green-500 transition-colors duration-300">
-                                <span className="text-sm font-medium text-white">F</span>
-                            </div>
-                        </div>
-
-                        {/* Mobile menu button */}
-                        <div className="md:hidden flex items-center">
-                            <button
-                                type="button"
-                                className="inline-flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-700 focus:outline-none"
-                                aria-controls="mobile-menu"
-                                aria-expanded="false"
-                            >
-                                <span className="sr-only">Open main menu</span>
-                                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Mobile menu */}
-                <div className="md:hidden hidden" id="mobile-menu">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700 bg-opacity-90">
-                        <a href="/app" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-green-800">
-                            App
-                        </a>
-                        <a href="/marketplace" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            Marketplace
-                        </a>
-                        <a href="/portfolio" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            Portfolio
-                        </a>
-                        <a href="/carbon" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            CO2 Saved
-                        </a>
-                    </div>
-                </div>
-            </nav>
-
+      <Navbar />
 
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-green-700 to-green-900 text-white">
@@ -225,16 +190,16 @@ export default function PortfolioPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Your Sales Portfolio
+                Your Waste Listings
               </h1>
               <p className="text-xl text-green-100 max-w-2xl">
-                Track all your agricultural waste sales, earnings, and transaction history in one place.
+                Track all your agricultural waste listings, earnings, and transaction history in one place.
               </p>
               <div className="flex space-x-4 pt-4">
                 <button className="bg-white text-green-800 hover:bg-green-100 font-medium px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105">
                   Download Report
                 </button>
-                <button 
+                <button
                   onClick={refreshData}
                   className="flex items-center border-2 border-white text-white hover:bg-green-700 font-medium px-6 py-3 rounded-lg transition-all duration-300"
                 >
@@ -256,17 +221,17 @@ export default function PortfolioPage() {
                     </div>
                     <div className="bg-green-700 p-4 rounded-xl">
                       <FiTrendingUp className="text-white text-2xl mb-2" />
-                      <p className="text-sm text-green-200">Avg. Price/Ton</p>
+                      <p className="text-sm text-green-200">Avg. Price/{salesData[0]?.quantityUnit || 'kg'}</p>
                       <p className="text-2xl font-bold">₹{Math.round(stats.averagePrice)}</p>
                     </div>
                     <div className="bg-green-800 p-4 rounded-xl">
                       <FiPackage className="text-white text-2xl mb-2" />
-                      <p className="text-sm text-green-200">Total Sold</p>
-                      <p className="text-2xl font-bold">{stats.totalWeight} tons</p>
+                      <p className="text-sm text-green-200">Total Listed</p>
+                      <p className="text-2xl font-bold">{stats.totalWeight} {salesData[0]?.quantityUnit || 'kg'}</p>
                     </div>
                     <div className="bg-green-900 p-4 rounded-xl">
                       <FiCalendar className="text-white text-2xl mb-2" />
-                      <p className="text-sm text-green-200">Transactions</p>
+                      <p className="text-sm text-green-200">Listings</p>
                       <p className="text-2xl font-bold">{stats.transactions}</p>
                     </div>
                   </div>
@@ -288,17 +253,17 @@ export default function PortfolioPage() {
           </div>
           <div className="bg-green-700 text-white p-4 rounded-xl">
             <FiTrendingUp className="text-2xl mb-2" />
-            <p className="text-sm">Avg. Price/Ton</p>
+            <p className="text-sm">Avg. Price/{salesData[0]?.quantityUnit || 'kg'}</p>
             <p className="text-lg font-bold">₹{Math.round(stats.averagePrice)}</p>
           </div>
           <div className="bg-green-800 text-white p-4 rounded-xl">
             <FiPackage className="text-2xl mb-2" />
-            <p className="text-sm">Total Sold</p>
-            <p className="text-lg font-bold">{stats.totalWeight} tons</p>
+            <p className="text-sm">Total Listed</p>
+            <p className="text-lg font-bold">{stats.totalWeight} {salesData[0]?.quantityUnit || 'kg'}</p>
           </div>
           <div className="bg-green-900 text-white p-4 rounded-xl">
             <FiCalendar className="text-2xl mb-2" />
-            <p className="text-sm">Transactions</p>
+            <p className="text-sm">Listings</p>
             <p className="text-lg font-bold">{stats.transactions}</p>
           </div>
         </div>
@@ -312,19 +277,19 @@ export default function PortfolioPage() {
               </div>
               <input
                 type="text"
-                placeholder="Search items..."
+                placeholder="Search items or descriptions..."
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-all duration-300"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
+
             <div className="flex space-x-4">
               <div className="flex space-x-2">
                 <button
                   className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeFilter === 'all' 
-                      ? 'bg-green-600 text-white' 
+                    activeFilter === 'all'
+                      ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveFilter('all')}
@@ -333,8 +298,8 @@ export default function PortfolioPage() {
                 </button>
                 <button
                   className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeFilter === 'completed' 
-                      ? 'bg-green-600 text-white' 
+                    activeFilter === 'completed'
+                      ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveFilter('completed')}
@@ -343,8 +308,8 @@ export default function PortfolioPage() {
                 </button>
                 <button
                   className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeFilter === 'pending' 
-                      ? 'bg-green-600 text-white' 
+                    activeFilter === 'pending'
+                      ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                   onClick={() => setActiveFilter('pending')}
@@ -356,14 +321,14 @@ export default function PortfolioPage() {
           </div>
         </div>
 
-        {/* Sales Table */}
+        {/* Listings Table */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-green-50">
                 <tr>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort('item')}
                   >
@@ -372,8 +337,8 @@ export default function PortfolioPage() {
                       {getSortIndicator('item')}
                     </div>
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort('price')}
                   >
@@ -382,18 +347,18 @@ export default function PortfolioPage() {
                       {getSortIndicator('price')}
                     </div>
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort('weight')}
                   >
                     <div className="flex items-center justify-end">
-                      Weight (tons)
+                      Quantity ({salesData[0]?.quantityUnit || 'kg'})
                       {getSortIndicator('weight')}
                     </div>
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort('time')}
                   >
@@ -402,8 +367,8 @@ export default function PortfolioPage() {
                       {getSortIndicator('time')}
                     </div>
                   </th>
-                  <th 
-                    scope="col" 
+                  <th
+                    scope="col"
                     className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider cursor-pointer"
                     onClick={() => requestSort('id')}
                   >
@@ -412,7 +377,10 @@ export default function PortfolioPage() {
                       {getSortIndicator('id')}
                     </div>
                   </th>
-                  <th scope="col" className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-4 text-right text-xs font-medium text-gray-700 uppercase tracking-wider"
+                  >
                     Status
                   </th>
                 </tr>
@@ -428,26 +396,35 @@ export default function PortfolioPage() {
                   </tr>
                 ) : filteredData.length > 0 ? (
                   filteredData.map((sale) => (
-                    <tr 
-                      key={sale.id} 
+                    <tr
+                      key={sale.id}
                       className="hover:bg-green-50 transition-colors duration-200"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <span className="text-green-800 font-medium">{sale.item.charAt(0)}</span>
-                          </div>
+                          {sale.imageUrl ? (
+                            <img
+                              src={sale.imageUrl}
+                              alt={sale.item}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                              <span className="text-green-800 font-medium">{sale.item.charAt(0)}</span>
+                            </div>
+                          )}
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{sale.item}</div>
-                            <div className="text-sm text-gray-500">ID: {sale.id}</div>
+                            <div className="text-sm text-gray-500">{sale.wasteDescription}</div>
+                            <div className="text-xs text-gray-400">ID: {sale.id.slice(0, 8)}...</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                        ₹{sale.price}/ton
+                        ₹{sale.price}/{sale.quantityUnit}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                        {sale.weight} tons
+                        {sale.weight} {sale.quantityUnit}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                         {formatDate(sale.time)}
@@ -467,7 +444,7 @@ export default function PortfolioPage() {
                         <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center mb-4">
                           <FiPackage className="text-gray-400 text-2xl" />
                         </div>
-                        <h3 className="text-lg font-medium text-gray-900">No sales found</h3>
+                        <h3 className="text-lg font-medium text-gray-900">No listings found</h3>
                         <p className="mt-1 text-gray-500">Try adjusting your search or filter criteria</p>
                       </div>
                     </td>
@@ -476,20 +453,20 @@ export default function PortfolioPage() {
               </tbody>
             </table>
           </div>
-          
+
           {/* Table Summary */}
           {!loading && filteredData.length > 0 && (
             <div className="bg-green-50 px-6 py-4 border-t border-gray-200">
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-700">
                   Showing <span className="font-medium">{filteredData.length}</span> of{' '}
-                  <span className="font-medium">{salesData.length}</span> transactions
+                  <span className="font-medium">{salesData.length}</span> listings
                 </p>
                 <div className="flex space-x-6">
                   <div className="text-right">
-                    <p className="text-xs text-gray-500">Total Weight</p>
+                    <p className="text-xs text-gray-500">Total Quantity</p>
                     <p className="font-medium">
-                      {filteredData.reduce((sum, item) => sum + item.weight, 0)} tons
+                      {filteredData.reduce((sum, item) => sum + item.weight, 0)} {salesData[0]?.quantityUnit || 'kg'}
                     </p>
                   </div>
                   <div className="text-right">
@@ -506,22 +483,22 @@ export default function PortfolioPage() {
           )}
         </div>
 
-        {/* Sales Chart Placeholder */}
+        {/* Listings Chart Placeholder */}
         <div className="mt-12 bg-white rounded-xl shadow-lg p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Sales Performance</h2>
+            <h2 className="text-xl font-bold text-gray-800">Listing Performance</h2>
             <div className="flex space-x-2">
               <button className="px-3 py-1 bg-green-100 text-green-800 rounded-lg text-sm">Monthly</button>
               <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Quarterly</button>
               <button className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Yearly</button>
             </div>
           </div>
-          
+
           <div className="h-64 flex items-end justify-center space-x-4 pb-6">
             {/* Simple bar chart animation */}
             {[40, 70, 100, 80, 120, 90, 60].map((height, index) => (
               <div key={index} className="relative flex flex-col items-center">
-                <div 
+                <div
                   className="w-8 bg-gradient-to-t from-green-600 to-green-400 rounded-t-lg transition-all duration-1000 ease-out"
                   style={{ height: `${height}px` }}
                 />
@@ -529,27 +506,27 @@ export default function PortfolioPage() {
               </div>
             ))}
           </div>
-          
+
           <div className="grid grid-cols-4 gap-4 mt-6">
             <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Highest Sale</p>
+              <p className="text-sm text-gray-500">Highest Listing</p>
               <p className="text-lg font-bold">₹28,500</p>
-              <p className="text-xs text-gray-500">Banana Waste</p>
+              <p className="text-xs text-gray-500">Rice Straw</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Avg. Price/Ton</p>
-              <p className="text-lg font-bold">₹1,850</p>
-              <p className="text-xs text-gray-500">+5.2% from last month</p>
+              <p className="text-sm text-gray-500">Avg. Price/{salesData[0]?.quantityUnit || 'kg'}</p>
+              <p className="text-lg font-bold">₹{Math.round(stats.averagePrice)}</p>
+              <p className="text-xs text-gray-500">Based on completed listings</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <p className="text-sm text-gray-500">Top Item</p>
-              <p className="text-lg font-bold">Rice Straw</p>
-              <p className="text-xs text-gray-500">220 tons sold</p>
+              <p className="text-lg font-bold">{salesData[0]?.item || 'Rice Straw'}</p>
+              <p className="text-xs text-gray-500">{stats.totalWeight} {salesData[0]?.quantityUnit || 'kg'} listed</p>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-500">Recent Sale</p>
-              <p className="text-lg font-bold">₹23,000</p>
-              <p className="text-xs text-gray-500">Wheat Straw</p>
+              <p className="text-sm text-gray-500">Recent Listing</p>
+              <p className="text-lg font-bold">{formatCurrency(salesData[0]?.price * salesData[0]?.weight || 0)}</p>
+              <p className="text-xs text-gray-500">{salesData[0]?.item || 'Wheat Straw'}</p>
             </div>
           </div>
         </div>
@@ -570,7 +547,7 @@ export default function PortfolioPage() {
                 Transforming agricultural waste into valuable resources through technology.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-green-200">
@@ -580,7 +557,7 @@ export default function PortfolioPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Reports</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-green-200">
@@ -590,7 +567,7 @@ export default function PortfolioPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
               <p className="text-green-200 mb-4">
@@ -601,9 +578,9 @@ export default function PortfolioPage() {
               </button>
             </div>
           </div>
-          
-          <div className="mt-12 pt-8 border-t border-green-800 text-center text-green-300">
-            <p>© 2023 AgriLink. All rights reserved.</p>
+
+          <div className="mt-12 pt-8 border-t border-green-800 text-center text-green-200">
+            <p>© 2025 AgriLink. All rights reserved.</p>
           </div>
         </div>
       </footer>
