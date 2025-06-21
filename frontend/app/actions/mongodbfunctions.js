@@ -30,18 +30,11 @@ export const withCollection = async (collectionName, fn) => {
     const db = await initDB();
     const collection = db.collection(collectionName);
     const result = await fn(collection);
-    
-    // Ensure the connection is closed after operation
-    await client.close();
+    // Do NOT close the client here; keep it open for reuse
     return result;
   } catch (error) {
     console.error(`Database operation failed for ${collectionName}:`, error);
-    
-    // Ensure connection is closed even if error occurs
-    if (client) {
-      await client.close();
-    }
-    
+    // Do NOT close the client here
     throw new Error(`Database operation failed: ${error.message}`);
   }
 };
