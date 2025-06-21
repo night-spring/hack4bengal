@@ -13,11 +13,14 @@ export default function AppPage() {
     const [classificationResult, setClassificationResult] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        wasteType: '',
+        cropType: '',
+        wasteDescription: '',
         quantity: '',
-        quality: '',
+        quantityUnit: 'kg',
+        moistureLevel: '',
+        ageOfWaste: '',
         location: '',
-        pickupPreference: '',
+        intendedUse: '',
         additionalNotes: ''
     });
     const fileInputRef = useRef(null);
@@ -35,16 +38,16 @@ export default function AppPage() {
             try {
                 // Mock AI classification
                 const mockResults = {
-                    wasteType: getRandomWasteType(),
+                    cropType: getRandomCropType(),
                     confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-                    quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
+                    moistureLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
                     estimatedValue: Math.floor(Math.random() * 5000) + 1000
                 };
 
                 const finalFormData = {
                     ...formData,
-                    wasteType: mockResults.wasteType,
-                    quality: mockResults.quality,
+                    cropType: mockResults.cropType,
+                    moistureLevel: mockResults.moistureLevel,
                     estimatedValue: mockResults.estimatedValue,
                     confidence: mockResults.confidence
                 };
@@ -79,18 +82,11 @@ export default function AppPage() {
             reader.onerror = error => reject(error);
         });
     };
-    const getRandomWasteType = () => {
+    const getRandomCropType = () => {
         const types = [
-            'Rice Straw',
-            'Wheat Straw',
-            'Sugarcane Bagasse',
-            'Corn Stalks',
-            'Cotton Stalks',
-            'Coconut Husks',
-            'Banana Plant Waste',
-            'Groundnut Shells',
-            'Mustard Stalks',
-            'Paddy Husk'
+            'Rice',
+            'Wheat',
+            'Sugarcane'
         ];
         return types[Math.floor(Math.random() * types.length)];
     };
@@ -99,16 +95,16 @@ export default function AppPage() {
         setIsLoading(true);
         setTimeout(() => {
             const mockResults = {
-                wasteType: getRandomWasteType(),
+                cropType: getRandomCropType(),
                 confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-                quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
+                moistureLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
                 estimatedValue: Math.floor(Math.random() * 5000) + 1000
             };
             setClassificationResult(mockResults);
             setFormData(prev => ({
                 ...prev,
-                wasteType: mockResults.wasteType,
-                quality: mockResults.quality
+                cropType: mockResults.cropType,
+                moistureLevel: mockResults.moistureLevel
             }));
             setIsLoading(false);
             setStep(2);
@@ -154,17 +150,19 @@ export default function AppPage() {
         setImage(url);
     }
 
-
     const resetProcess = () => {
         setImage(null);
         setPreview(null);
         setClassificationResult(null);
         setFormData({
-            wasteType: '',
+            cropType: '',
+            wasteDescription: '',
             quantity: '',
-            quality: '',
+            quantityUnit: 'kg',
+            moistureLevel: '',
+            ageOfWaste: '',
             location: '',
-            pickupPreference: '',
+            intendedUse: '',
             additionalNotes: ''
         });
         setDescription('');
@@ -376,9 +374,10 @@ export default function AppPage() {
                                         <textarea
                                             value={description}
                                             onChange={(e) => setDescription(e.target.value)}
-                                            className="w-full h-40 p-4 border-2 border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                            className="w-full h-40 p-4 border-2 border-gray-300 rounded-lg bg-white text-black focus:ring-green-500 focus:border-green-500 transition-all duration-300"
                                             placeholder="Describe your agricultural waste (e.g., type, condition, approximate quantity)..."
                                         />
+
                                         <div className="mt-4 flex justify-center">
                                             <button
                                                 onClick={handleDescriptionSubmit}
@@ -416,195 +415,215 @@ export default function AppPage() {
                     {/* Step 2: Waste Details Form */}
                     {step === 2 && (
                         <div className="p-8" data-aos="fade-up">
-                            <div className="text-center">
-                                <h2 className="text-2xl font-bold text-gray-800">Waste Details</h2>
-                                <p className="mt-2 text-gray-600">
-                                    Review the AI classification and provide additional details about your waste
+                            <div className="text-center mb-8">
+                                <h2 className="text-3xl font-extrabold text-gray-800">Waste Classification & Details</h2>
+                                <p className="mt-2 text-gray-600 text-sm max-w-xl mx-auto">
+                                    Review the AI's classification and refine the details to help us process your agricultural waste efficiently.
                                 </p>
                             </div>
 
-                            <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-                                {/* Left Column - AI Results */}
-                                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 transform transition-all duration-300 hover:scale-105" data-aos="fade-right">
-                                    <h3 className="text-lg font-medium text-gray-800 mb-4">AI Classification Results</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* AI Result Summary */}
+                                <div className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-md transition hover:shadow-lg" data-aos="fade-right">
+                                    <h3 className="text-lg font-semibold text-green-800 mb-4">AI Prediction</h3>
                                     {classificationResult && (
-                                        <div className="space-y-4">
+                                        <div className="space-y-4 text-sm text-gray-800">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-500">Waste Type</label>
-                                                <p className="mt-1 text-gray-900 font-medium">
-                                                    {classificationResult.wasteType}
+                                                <p className="font-medium">Crop Type:</p>
+                                                <div className="flex items-center justify-between">
+                                                    <span>{classificationResult.cropType}</span>
                                                     <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
                                                         {classificationResult.confidence * 100}% confidence
                                                     </span>
-                                                </p>
+                                                </div>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-500">Quality Assessment</label>
-                                                <p className="mt-1 text-gray-900 font-medium">
-                                                    {classificationResult.quality}
-                                                    {classificationResult.quality === 'High' && (
-                                                        <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                                                            Premium Value
-                                                        </span>
-                                                    )}
-                                                </p>
+                                                <p className="font-medium">Moisture Level:</p>
+                                                <span>{classificationResult.moistureLevel}</span>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-500">Estimated Value</label>
-                                                <p className="mt-1 text-gray-900 font-medium">
-                                                    ₹{classificationResult.estimatedValue} per ton
-                                                </p>
+                                                <p className="font-medium">Estimated Value:</p>
+                                                <span>₹{classificationResult.estimatedValue} per ton</span>
                                             </div>
-                                            <div className="pt-4 border-t border-gray-200">
+                                            <div className="pt-4">
                                                 <button
                                                     onClick={() => setStep(1)}
-                                                    className="text-sm text-green-600 hover:text-green-800 font-medium transition-colors duration-300"
+                                                    className="text-sm text-green-600 hover:underline font-medium"
                                                 >
-                                                    Re-upload or re-describe
+                                                    ↺ Re-upload or re-describe
                                                 </button>
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Right Column - Form */}
-                                <form onSubmit={handleSubmit} className="space-y-4" data-aos="fade-left">
-                                    {/* Waste Type */}
-                                    <div>
-                                        <label htmlFor="wasteType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Waste Type
-                                        </label>
-                                        <select
-                                            id="wasteType"
-                                            name="wasteType"
-                                            value={formData.wasteType}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm transition-all duration-300"
-                                            required
-                                        >
-                                            <option value="">Select waste type</option>
-                                            <option value="Rice Straw">Rice Straw</option>
-                                            <option value="Wheat Straw">Wheat Straw</option>
-                                            <option value="Sugarcane Bagasse">Sugarcane Bagasse</option>
-                                            <option value="Corn Stalks">Corn Stalks</option>
-                                            <option value="Cotton Stalks">Cotton Stalks</option>
-                                            <option value="Coconut Husks">Coconut Husks</option>
-                                            <option value="Banana Plant Waste">Banana Plant Waste</option>
-                                            <option value="Groundnut Shells">Groundnut Shells</option>
-                                            <option value="Mustard Stalks">Mustard Stalks</option>
-                                            <option value="Paddy Husk">Paddy Husk</option>
-                                        </select>
+                                {/* Form */}
+                                <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 shadow-md space-y-5" data-aos="fade-left">
+                                    <h3 className="text-lg font-semibold text-gray-800">Provide Details</h3>
+
+                                    {/* Group 1 */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="cropType" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Type of Crop
+                                            </label>
+                                            <select
+                                                id="cropType"
+                                                name="cropType"
+                                                value={formData.cropType}
+                                                onChange={handleInputChange}
+                                                className="form-select bg-white border border-gray-300 text-gray-900 rounded-md w-full py-2 px-3 focus:ring-green-500 focus:border-green-500"
+                                                required
+                                            >
+                                                <option value="">Select crop type</option>
+                                                <option value="Rice">Rice</option>
+                                                <option value="Wheat">Wheat</option>
+                                                <option value="Sugarcane">Sugarcane</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label htmlFor="moistureLevel" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Moisture Level
+                                            </label>
+                                            <select
+                                                id="moistureLevel"
+                                                name="moistureLevel"
+                                                value={formData.moistureLevel}
+                                                onChange={handleInputChange}
+                                                className="form-select bg-white border border-gray-300 text-gray-900 rounded-md w-full py-2 px-3 focus:ring-green-500 focus:border-green-500"
+                                                required
+                                            >
+                                                <option value="">Select moisture level</option>
+                                                <option value="Low">Low (Dry)</option>
+                                                <option value="Medium">Medium (Some moisture)</option>
+                                                <option value="High">High (Wet)</option>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    {/* Quantity */}
+                                    {/* Waste Description */}
                                     <div>
-                                        <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Quantity (in tons)
+                                        <label htmlFor="wasteDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Waste Description
                                         </label>
-                                        <input
-                                            type="number"
-                                            id="quantity"
-                                            name="quantity"
-                                            min="0.1"
-                                            step="0.1"
-                                            value={formData.quantity}
+                                        <textarea
+                                            id="wasteDescription"
+                                            name="wasteDescription"
+                                            rows={3}
+                                            value={formData.wasteDescription}
                                             onChange={handleInputChange}
-                                            className="mt-1 block w-full shadow-sm sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-300"
-                                            placeholder="e.g. 2.5"
+                                            className="w-full border border-gray-300 text-black bg-white rounded-md p-3 focus:ring-green-500 focus:border-green-500"
+                                            placeholder="Describe the waste material (e.g., straw, husk, stalks)..."
                                             required
                                         />
                                     </div>
 
-                                    {/* Quality */}
-                                    <div>
-                                        <label htmlFor="quality" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Quality
-                                        </label>
-                                        <select
-                                            id="quality"
-                                            name="quality"
-                                            value={formData.quality}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm transition-all duration-300"
-                                            required
-                                        >
-                                            <option value="">Select quality</option>
-                                            <option value="Low">Low (Mixed with soil/other materials)</option>
-                                            <option value="Medium">Medium (Some impurities)</option>
-                                            <option value="High">High (Clean and well-separated)</option>
-                                        </select>
+                                    {/* Group 2 */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Quantity
+                                            </label>
+                                            <input
+                                                type="number"
+                                                id="quantity"
+                                                name="quantity"
+                                                min="0.1"
+                                                step="0.1"
+                                                value={formData.quantity}
+                                                onChange={handleInputChange}
+                                                className="w-full border border-gray-300 bg-white text-black rounded-md p-2.5 focus:ring-green-500 focus:border-green-500"
+                                                placeholder="e.g. 2.5"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="quantityUnit" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Unit
+                                            </label>
+                                            <select
+                                                id="quantityUnit"
+                                                name="quantityUnit"
+                                                value={formData.quantityUnit}
+                                                onChange={handleInputChange}
+                                                className="form-select bg-white border border-gray-300 text-gray-900 rounded-md w-full py-2 px-3 focus:ring-green-500 focus:border-green-500"
+                                                required
+                                            >
+                                                <option value="kg">Kilograms (kg)</option>
+                                                <option value="ton">Tons</option>
+                                            </select>
+                                        </div>
                                     </div>
 
-                                    {/* Location */}
-                                    <div>
-                                        <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Location (Nearest Landmark)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="location"
-                                            name="location"
-                                            value={formData.location}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full shadow-sm sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-300"
-                                            placeholder="e.g. Near Krishi Farm, Pune Highway"
-                                            required
-                                        />
-                                    </div>
-
-                                    {/* Pickup Preference */}
-                                    <div>
-                                        <label htmlFor="pickupPreference" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Pickup Preference
-                                        </label>
-                                        <select
-                                            id="pickupPreference"
-                                            name="pickupPreference"
-                                            value={formData.pickupPreference}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm transition-all duration-300"
-                                            required
-                                        >
-                                            <option value="">Select pickup option</option>
-                                            <option value="Self Transport">I can transport to nearby collection center</option>
-                                            <option value="Need Pickup">Need pickup from my farm</option>
-                                        </select>
+                                    {/* Age + Location */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label htmlFor="ageOfWaste" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Age of Waste
+                                            </label>
+                                            <select
+                                                id="ageOfWaste"
+                                                name="ageOfWaste"
+                                                value={formData.ageOfWaste}
+                                                onChange={handleInputChange}
+                                                className="form-select bg-white border border-gray-300 text-gray-900 rounded-md w-full py-2 px-3 focus:ring-green-500 focus:border-green-500"
+                                                required
+                                            >
+                                                <option value="">Select age of waste</option>
+                                                <option value="Fresh">Fresh (0–1 week)</option>
+                                                <option value="1-2 weeks">1–2 weeks</option>
+                                                <option value="2-4 weeks">2–4 weeks</option>
+                                                <option value="1-2 months">1–2 months</option>
+                                                <option value="2+ months">2+ months</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                                                Location (Nearest Landmark)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id="location"
+                                                name="location"
+                                                value={formData.location}
+                                                onChange={handleInputChange}
+                                                className="w-full border border-gray-300 bg-white text-black rounded-md p-2.5 focus:ring-green-500 focus:border-green-500"
+                                                placeholder="e.g. Near Krishi Farm, Pune Highway"
+                                                required
+                                            />
+                                        </div>
                                     </div>
 
                                     {/* Additional Notes */}
                                     <div>
-                                        <label htmlFor="additionalNotes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <label htmlFor="additionalNotes" className="block text-sm font-medium text-gray-700 mb-1">
                                             Additional Notes
                                         </label>
                                         <textarea
                                             id="additionalNotes"
                                             name="additionalNotes"
-                                            rows={3}
+                                            rows={2}
                                             value={formData.additionalNotes}
                                             onChange={handleInputChange}
-                                            className="mt-1 block w-full shadow-sm sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                                            className="w-full border border-gray-300 text-black bg-white rounded-md p-3 focus:ring-green-500 focus:border-green-500"
                                             placeholder="Any special instructions or details about the waste..."
                                         />
                                     </div>
 
-                                    {/* Buttons */}
-                                    <div className="flex justify-end space-x-4 pt-4">
+                                    {/* Submit Buttons */}
+                                    <div className="flex justify-end space-x-3 pt-4">
                                         <button
                                             type="button"
                                             onClick={() => setStep(1)}
-                                            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
+                                            className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                         >
-                                            Back
+                                            ← Back
                                         </button>
                                         <button
                                             type="submit"
-                                            className="relative group px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300"
                                             disabled={isLoading}
-                                            data-aos="fade-up"
-                                            data-aos-delay="100"
-
+                                            className="px-5 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700 focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all relative group"
                                         >
-                                            <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
                                             {isLoading ? 'Processing...' : 'Submit Waste Listing'}
                                         </button>
                                     </div>
@@ -612,6 +631,7 @@ export default function AppPage() {
                             </div>
                         </div>
                     )}
+
 
                     {/* Step 3: Results */}
                     {step === 3 && (
@@ -632,20 +652,32 @@ export default function AppPage() {
                                 </div>
                                 <div className="px-6 py-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500">Waste Type</p>
-                                        <p className="mt-1 text-sm text-gray-900">{formData.wasteType}</p>
+                                        <p className="text-sm font-medium text-gray-500">Crop Type</p>
+                                        <p className="mt-1 text-sm text-gray-900">{formData.cropType}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Waste Description</p>
+                                        <p className="mt-1 text-sm text-gray-900">{formData.wasteDescription}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Quantity</p>
-                                        <p className="mt-1 text-sm text-gray-900">{formData.quantity} tons</p>
+                                        <p className="mt-1 text-sm text-gray-900">{formData.quantity} {formData.quantityUnit}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500">Quality</p>
-                                        <p className="mt-1 text-sm text-gray-900">{formData.quality}</p>
+                                        <p className="text-sm font-medium text-gray-500">Moisture Level</p>
+                                        <p className="mt-1 text-sm text-gray-900">{formData.moistureLevel}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Age of Waste</p>
+                                        <p className="mt-1 text-sm text-gray-900">{formData.ageOfWaste}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Location</p>
                                         <p className="mt-1 text-sm text-gray-900">{formData.location}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Intended Use</p>
+                                        <p className="mt-1 text-sm text-gray-900">{formData.intendedUse}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Estimated Value</p>
@@ -654,14 +686,20 @@ export default function AppPage() {
                                             <span className="text-gray-500"> (₹{classificationResult.estimatedValue}/ton)</span>
                                         </p>
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-500">Pickup Preference</p>
-                                        <p className="mt-1 text-sm text-gray-900">{formData.pickupPreference}</p>
-                                    </div>
                                     {formData.additionalNotes && (
                                         <div className="sm:col-span-2">
                                             <p className="text-sm font-medium text-gray-500">Additional Notes</p>
                                             <p className="mt-1 text-sm text-gray-900">{formData.additionalNotes}</p>
+                                        </div>
+                                    )}
+                                    {preview && (
+                                        <div className="sm:col-span-2">
+                                            <p className="text-sm font-medium text-gray-500">Uploaded Image</p>
+                                            <img
+                                                src={preview}
+                                                alt="Waste preview"
+                                                className="mt-2 h-48 w-full object-contain rounded-lg border border-gray-200"
+                                            />
                                         </div>
                                     )}
                                 </div>
@@ -731,7 +769,7 @@ export default function AppPage() {
                         </div>
                     )}
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 }
