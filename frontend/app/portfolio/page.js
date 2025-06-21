@@ -1,13 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useUser } from '@civic/auth/react';
 import { FiFilter, FiSearch, FiDollarSign, FiTrendingUp, FiCalendar, FiPackage, FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 
 export default function PortfolioPage() {
+  const { user } = useUser();
   const [salesData, setSalesData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'time', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('all');
   const [stats, setStats] = useState({
@@ -17,30 +19,66 @@ export default function PortfolioPage() {
     transactions: 0
   });
 
-  // Mock sales data
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockData = [
-        { id: 1, item: 'Rice Straw', price: 1850, weight: 120, time: '2023-11-15', status: 'completed' },
-        { id: 2, item: 'Wheat Straw', price: 2200, weight: 85, time: '2023-11-18', status: 'completed' },
-        { id: 3, item: 'Sugarcane Bagasse', price: 1500, weight: 200, time: '2023-11-20', status: 'completed' },
-        { id: 4, item: 'Corn Stalks', price: 1200, weight: 150, time: '2023-11-22', status: 'completed' },
-        { id: 5, item: 'Cotton Stalks', price: 1400, weight: 95, time: '2023-11-25', status: 'completed' },
-        { id: 6, item: 'Coconut Husks', price: 2500, weight: 60, time: '2023-11-28', status: 'completed' },
-        { id: 7, item: 'Banana Plant Waste', price: 2800, weight: 75, time: '2023-12-01', status: 'completed' },
-        { id: 8, item: 'Mustard Stalks', price: 1700, weight: 110, time: '2023-12-05', status: 'completed' },
-        { id: 9, item: 'Paddy Husk', price: 1350, weight: 180, time: '2023-12-08', status: 'completed' },
-        { id: 10, item: 'Rice Straw', price: 1900, weight: 100, time: '2023-12-12', status: 'completed' },
-        { id: 11, item: 'Wheat Straw', price: 2300, weight: 90, time: '2023-12-15', status: 'pending' },
-        { id: 12, item: 'Sugarcane Bagasse', price: 1550, weight: 170, time: '2023-12-18', status: 'pending' },
-      ];
-      
-      setSalesData(mockData);
-      setFilteredData(mockData);
+  // Fetch sales data from your API endpoint
+  const fetchUserSales = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    try {
+      // Replace this with your actual API endpoint
+      const response = await fetch(`/api/user-sales?userId=${user.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      let sales;
+      if (!response.ok) {
+        // Use mock data if API fails
+        sales = [
+          {
+            _id: '1',
+            cropType: 'Rice Straw',
+            classificationResult: { estimatedValue: 1850 },
+            quantity: 120,
+            quantityUnit: 'tons',
+            createdAt: '2023-11-15',
+            status: 'completed',
+            imageUrl: null
+          },
+          {
+            _id: '2',
+            cropType: 'Wheat Straw',
+            classificationResult: { estimatedValue: 2200 },
+            quantity: 85,
+            quantityUnit: 'tons',
+            createdAt: '2023-11-18',
+            status: 'completed',
+            imageUrl: null
+          }
+        ];
+      } else {
+        sales = await response.json();
+      }
+
+      // Transform data for frontend display
+      const transformedSales = sales.map(sale => ({
+        id: sale._id || sale.id,
+        item: sale.cropType || 'Agricultural Waste',
+        price: sale.classificationResult?.estimatedValue || 0,
+        weight: sale.quantity || 0,
+        quantityUnit: sale.quantityUnit || 'tons',
+        time: sale.createdAt || new Date().toISOString(),
+        status: sale.status || 'completed',
+        imageUrl: sale.imageUrl || null
+      }));
+
+      setSalesData(transformedSales);
+      setFilteredData(transformedSales);
       
       // Calculate stats
-      const completed = mockData.filter(item => item.status === 'completed');
+      const completed = transformedSales.filter(item => item.status === 'completed');
       const totalSales = completed.reduce((sum, item) => sum + (item.price * item.weight), 0);
       const totalWeight = completed.reduce((sum, item) => sum + item.weight, 0);
       const averagePrice = totalWeight > 0 ? totalSales / totalWeight : 0;
@@ -51,10 +89,57 @@ export default function PortfolioPage() {
         averagePrice,
         transactions: completed.length
       });
-      
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
+      // Use mock data if fetch throws
+      const sales = [
+        {
+          _id: '1',
+          cropType: 'Rice Straw',
+          classificationResult: { estimatedValue: 1850 },
+          quantity: 120,
+          quantityUnit: 'tons',
+          createdAt: '2023-11-15',
+          status: 'completed',
+          imageUrl: null
+        },
+        {
+          _id: '2',
+          cropType: 'Wheat Straw',
+          classificationResult: { estimatedValue: 2200 },
+          quantity: 85,
+          quantityUnit: 'tons',
+          createdAt: '2023-11-18',
+          status: 'completed',
+          imageUrl: null
+        }
+      ];
+      const transformedSales = sales.map(sale => ({
+        id: sale._id || sale.id,
+        item: sale.cropType || 'Agricultural Waste',
+        price: sale.classificationResult?.estimatedValue || 0,
+        weight: sale.quantity || 0,
+        quantityUnit: sale.quantityUnit || 'tons',
+        time: sale.createdAt || new Date().toISOString(),
+        status: sale.status || 'completed',
+        imageUrl: sale.imageUrl || null
+      }));
+      setSalesData(transformedSales);
+      setFilteredData(transformedSales);
+      setStats({
+        totalSales: transformedSales.reduce((sum, item) => sum + (item.price * item.weight), 0),
+        totalWeight: transformedSales.reduce((sum, item) => sum + item.weight, 0),
+        averagePrice: transformedSales.length > 0 ? transformedSales.reduce((sum, item) => sum + (item.price * item.weight), 0) / transformedSales.reduce((sum, item) => sum + item.weight, 0) : 0,
+        transactions: transformedSales.length
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
-  }, []);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserSales();
+  }, [user?.id]);
 
   // Filter and sort functionality
   useEffect(() => {
@@ -121,11 +206,27 @@ export default function PortfolioPage() {
   };
 
   const refreshData = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+    fetchUserSales();
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-md text-center">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Please Log In</h2>
+          <p className="text-gray-600 mb-6">
+            You need to be logged in to view your portfolio.
+          </p>
+          <a 
+            href="/login" 
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Go to Login
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
@@ -278,6 +379,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* Main Content */}
+   {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Stats Cards - Mobile View */}
         <div className="md:hidden grid grid-cols-2 gap-4 mb-8">
@@ -294,7 +396,7 @@ export default function PortfolioPage() {
           <div className="bg-green-800 text-white p-4 rounded-xl">
             <FiPackage className="text-2xl mb-2" />
             <p className="text-sm">Total Sold</p>
-            <p className="text-lg font-bold">{stats.totalWeight} tons</p>
+            <p className="text-lg font-bold">{stats.totalWeight} {salesData[0]?.quantityUnit || 'tons'}</p>
           </div>
           <div className="bg-green-900 text-white p-4 rounded-xl">
             <FiCalendar className="text-2xl mb-2" />
@@ -388,7 +490,7 @@ export default function PortfolioPage() {
                     onClick={() => requestSort('weight')}
                   >
                     <div className="flex items-center justify-end">
-                      Weight (tons)
+                      Weight ({salesData[0]?.quantityUnit || 'tons'})
                       {getSortIndicator('weight')}
                     </div>
                   </th>
@@ -439,15 +541,15 @@ export default function PortfolioPage() {
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{sale.item}</div>
-                            <div className="text-sm text-gray-500">ID: {sale.id}</div>
+                            <div className="text-sm text-gray-500">ID: {sale.id.toString().slice(0, 8)}...</div>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                        ₹{sale.price}/ton
+                        ₹{sale.price}/{sale.quantityUnit || 'ton'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                        {sale.weight} tons
+                        {sale.weight} {sale.quantityUnit || 'tons'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                         {formatDate(sale.time)}
@@ -489,7 +591,7 @@ export default function PortfolioPage() {
                   <div className="text-right">
                     <p className="text-xs text-gray-500">Total Weight</p>
                     <p className="font-medium">
-                      {filteredData.reduce((sum, item) => sum + item.weight, 0)} tons
+                      {filteredData.reduce((sum, item) => sum + item.weight, 0)} {salesData[0]?.quantityUnit || 'tons'}
                     </p>
                   </div>
                   <div className="text-right">
