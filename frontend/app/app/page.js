@@ -4,7 +4,7 @@ import Head from 'next/head';
 import { FiUpload, FiCamera, FiInfo, FiCheckCircle, FiXCircle, FiEdit2 } from 'react-icons/fi';
 import { uploadWasteInfo, uploadWasteImage } from "../actions/mongodbfunctions"
 import { v4 as uuidv4 } from 'uuid';
-
+import { uploadWasteData } from '../actions/mongodbfunctions';
 
 
 export default function AppPage() {
@@ -25,31 +25,60 @@ export default function AppPage() {
     const [inputMethod, setInputMethod] = useState('image'); // Added state for inputMethod
     const [description, setDescription] = useState(''); // Added state for description
 
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-            setPreview(URL.createObjectURL(file));
-            setIsLoading(true);
-            setTimeout(() => {
-                const mockResults = {
-                    wasteType: getRandomWasteType(),
-                    confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-                    quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-                    estimatedValue: Math.floor(Math.random() * 5000) + 1000
-                };
-                setClassificationResult(mockResults);
-                setFormData(prev => ({
-                    ...prev,
-                    wasteType: mockResults.wasteType,
-                    quality: mockResults.quality
-                }));
-                setIsLoading(false);
-                setStep(2);
-            }, 1500);
-        }
-    };
+    const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
+    setIsLoading(true);
 
+    try {
+      // Mock AI classification
+      const mockResults = {
+        wasteType: getRandomWasteType(),
+        confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
+        quality: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
+        estimatedValue: Math.floor(Math.random() * 5000) + 1000
+      };
+
+      const finalFormData = {
+        ...formData,
+        wasteType: mockResults.wasteType,
+        quality: mockResults.quality,
+        estimatedValue: mockResults.estimatedValue,
+        confidence: mockResults.confidence
+      };
+
+      // Convert file to base64 for server action
+      const base64Image = await convertFileToBase64(file);
+      
+      // Upload to MongoDB + Supabase
+      const result = await uploadWasteData({
+        formData: finalFormData,
+        imageBase64: base64Image
+      });
+
+      setClassificationResult(mockResults);
+      setFormData(finalFormData);
+      setStep(2);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      alert("Something went wrong while uploading data. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+};
+
+// Helper function to convert file to base64
+const convertFileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+};
     const getRandomWasteType = () => {
         const types = [
             'Rice Straw',
@@ -95,18 +124,27 @@ export default function AppPage() {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        const imageFile = e.get('file');
-
-        await uploadWasteImage({ imageFile: imageFile });
-
-
-        await uploadWasteInfo({ classificationResult, formData });
-        setIsLoading(false);
-        setStep(3);
-        console.log("classificationResult: ", classificationResult);
-        console.log("formdata: ", formData);
-    };
+  e.preventDefault();
+  setIsLoading(true);
+  
+  try {
+    // Convert image to base64 if it exists
+    const imageBase64 = image ? await convertFileToBase64(image) : null;
+    
+    await uploadWasteInfo({ 
+      classificationResult, 
+      formData,
+      imageBase64 
+    });
+    
+    setStep(3);
+  } catch (err) {
+    console.error("Submission failed:", err);
+    alert("Something went wrong while submitting. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
     function handleFileChange(e) {
         const file = e.target.files?.[0];
@@ -311,26 +349,27 @@ export default function AppPage() {
                                                 <p className="text-sm text-gray-500">JPG, PNG up to 5MB</p>
                                             </div>
                                         )}
-                                        <form action={handleSubmit} encType="multipart/form-data">
-
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file" name="file" accept="image/*" onChange={handleFileChange} required
-                                                className='hidden'
-                                            />
-                                            <div className="mt-6">
-                                                <button type='submit'
-                                                    onClick={() => fileInputRef.current.click()}
-                                                    className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
-                                                    data-aos="fade-up"
-                                                    data-aos-delay="200"
-                                                >
-                                                    <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                                                    <FiCamera className="mr-2 inline" />
-                                                    {preview ? 'Take Another Photo' : 'Take Photo'}
-                                                </button>
-                                            </div>
-                                        </form>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            name="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className='hidden'
+                                        />
+                                        <div className="mt-6">
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current.click()}
+                                                className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
+                                                data-aos="fade-up"
+                                                data-aos-delay="200"
+                                            >
+                                                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                                                <FiCamera className="mr-2 inline" />
+                                                {preview ? 'Take Another Photo' : 'Take Photo'}
+                                            </button>
+                                        </div>
                                     </>
                                 ) : (
                                     <div className="w-full max-w-md" data-aos="fade-up" data-aos-delay="100">
