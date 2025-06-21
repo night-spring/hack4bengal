@@ -1,11 +1,36 @@
 'use client'
 import Link from 'next/link';
 import { useUser } from '@civic/auth/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
     const { user } = useUser();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const pathname = usePathname();
+    const [activeTab, setActiveTab] = useState('/');
+
+    useEffect(() => {
+        const savedTab = localStorage.getItem('activeTab');
+        if (savedTab) {
+            setActiveTab(savedTab);
+        } else {
+            setActiveTab(pathname);
+        }
+    }, [pathname]);
+
+    const handleTabClick = (path) => {
+        localStorage.setItem('activeTab', path);
+        setActiveTab(path);
+        setMobileMenuOpen(false);
+    };
+
+    const navItems = [
+        { label: 'App', href: '/app' },
+        { label: 'Marketplace', href: '/marketplace' },
+        { label: 'Portfolio', href: '/portfolio' },
+        { label: 'CO2 Saved', href: '/carbon' },
+    ];
 
     return (
         <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
@@ -26,18 +51,20 @@ export default function Navbar() {
                     {/* Navigation Tabs - Desktop */}
                     <div className="hidden md:block">
                         <div className="flex items-center space-x-8">
-                            <Link href="/app" className="px-1 py-2 border-b-2 border-green-500 text-sm font-medium text-white">
-                                App
-                            </Link>
-                            <Link href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                Marketplace
-                            </Link>
-                            <Link href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                Portfolio
-                            </Link>
-                            <Link href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                CO2 Saved
-                            </Link>
+                            {navItems.map(item => (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={() => handleTabClick(item.href)}
+                                    className={`px-1 py-2 border-b-2 text-sm font-medium transition-colors duration-300 ${
+                                        activeTab === item.href
+                                            ? 'border-green-500 text-white'
+                                            : 'border-transparent text-green-200 hover:text-white hover:border-green-300'
+                                    }`}
+                                >
+                                    {item.label}
+                                </Link>
+                            ))}
                         </div>
                     </div>
 
@@ -76,34 +103,20 @@ export default function Navbar() {
             {/* Mobile menu */}
             <div className={`md:hidden ${mobileMenuOpen ? 'block' : 'hidden'}`} id="mobile-menu">
                 <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700 bg-opacity-90">
-                    <Link 
-                        href="/app" 
-                        className="block px-3 py-2 rounded-md text-base font-medium text-white bg-green-800"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        App
-                    </Link>
-                    <Link 
-                        href="/marketplace" 
-                        className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        Marketplace
-                    </Link>
-                    <Link 
-                        href="/portfolio" 
-                        className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        Portfolio
-                    </Link>
-                    <Link 
-                        href="/carbon" 
-                        className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600"
-                        onClick={() => setMobileMenuOpen(false)}
-                    >
-                        CO2 Saved
-                    </Link>
+                    {navItems.map(item => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => handleTabClick(item.href)}
+                            className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                                activeTab === item.href
+                                    ? 'text-white bg-green-800'
+                                    : 'text-green-200 hover:text-white hover:bg-green-600'
+                            }`}
+                        >
+                            {item.label}
+                        </Link>
+                    ))}
                 </div>
             </div>
         </nav>
