@@ -4,7 +4,8 @@ import { FiFilter, FiSearch, FiShoppingCart, FiTrendingUp, FiMapPin, FiClock, Fi
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 
-import {getMockTenders} from "../actions/mongodbfunctions"
+import { getMockTenders } from "../actions/mongodbfunctions"
+import Link from 'next/link';
 export default function MarketplacePage() {
   // Set page title
   useEffect(() => {
@@ -128,14 +129,16 @@ export default function MarketplacePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             {/* Logo */}
-            <div className="flex items-center">
-              <div className="flex-shrink-0 flex items-center">
-                <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
+            <Link href="/">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 flex items-center">
+                  <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
+                </div>
               </div>
-            </div>
+            </Link>
 
             {/* Navigation Tabs */}
             <div className="hidden md:block">
@@ -199,10 +202,10 @@ export default function MarketplacePage() {
             </a>
           </div>
         </div>
-      </nav>
+      </nav >
 
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-green-700 to-green-900 text-white">
+      < div className="relative bg-gradient-to-r from-green-700 to-green-900 text-white" >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
@@ -259,12 +262,12 @@ export default function MarketplacePage() {
             </div>
           </div>
         </div>
-      </div>
+      </div >
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      < main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" >
         {/* Marketplace Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        < div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12" >
           <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition-shadow duration-300">
             <h3 className="text-lg font-medium text-gray-500">Active Tenders</h3>
             <p className="text-3xl font-bold text-gray-800 mt-2">24</p>
@@ -281,10 +284,10 @@ export default function MarketplacePage() {
             <h3 className="text-lg font-medium text-gray-500">Avg. CO2 Saved</h3>
             <p className="text-3xl font-bold text-gray-800 mt-2">12.5 tons</p>
           </div>
-        </div>
+        </div >
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        < div className="bg-white rounded-xl shadow-lg p-6 mb-8" >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="relative flex-1 max-w-md">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -362,114 +365,118 @@ export default function MarketplacePage() {
               Closed
             </button>
           </div>
-        </div>
+        </div >
 
         {/* Tenders Grid */}
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTenders.map((tender,index) => (
-              <div
-                key={index}
-                className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-lg font-bold text-gray-800">{tender.title}</h3>
-                        {getStatusBadge(tender.status)}
+        {
+          loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTenders.map((tender, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-lg font-bold text-gray-800">{tender.title}</h3>
+                          {getStatusBadge(tender.status)}
+                        </div>
+                        <p className="text-gray-600 mt-1">{tender.company}</p>
                       </div>
-                      <p className="text-gray-600 mt-1">{tender.company}</p>
-                    </div>
-                    <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                      {tender.wasteType}
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Quantity</p>
-                      <p className="font-semibold">{tender.quantity} tons</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Price/Ton</p>
-                      <p className="font-semibold text-green-600">₹{tender.pricePerTon}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Location</p>
-                      <div className="flex items-center">
-                        <FiMapPin className="text-gray-400 mr-1" />
-                        <span className="font-medium">{tender.location}</span>
+                      <div className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                        {tender.wasteType}
                       </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Deadline</p>
-                      <div className="flex items-center">
-                        <FiClock className="text-gray-400 mr-1" />
-                        <span className="font-medium">{getDaysLeft(tender.deadline)}</span>
+
+                    <div className="mt-6 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-500">Quantity</p>
+                        <p className="font-semibold">{tender.quantity} tons</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Price/Ton</p>
+                        <p className="font-semibold text-green-600">₹{tender.pricePerTon}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Location</p>
+                        <div className="flex items-center">
+                          <FiMapPin className="text-gray-400 mr-1" />
+                          <span className="font-medium">{tender.location}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Deadline</p>
+                        <div className="flex items-center">
+                          <FiClock className="text-gray-400 mr-1" />
+                          <span className="font-medium">{getDaysLeft(tender.deadline)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="mt-6">
-                    <p className="text-sm text-gray-500 mb-2">Requirements:</p>
-                    <ul className="space-y-1 text-sm">
-                      {tender.requirements.split(', ').map((req, idx) => (
-                        <li key={idx} className="flex items-start">
-                          <FiCheck className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="mt-8 flex justify-between items-center">
-                    <div>
-                      <p className="text-xs text-gray-500">Order Range</p>
-                      <p className="text-sm font-medium">{tender.minOrder} - {tender.maxOrder} tons</p>
+                    <div className="mt-6">
+                      <p className="text-sm text-gray-500 mb-2">Requirements:</p>
+                      <ul className="space-y-1 text-sm">
+                        {tender.requirements.split(', ').map((req, idx) => (
+                          <li key={idx} className="flex items-start">
+                            <FiCheck className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>{req}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                    <button
-                      className={`px-4 py-2 rounded-lg font-medium flex items-center ${tender.status === 'closed'
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'bg-green-600 text-white hover:bg-green-700 transition-colors duration-300'
-                        }`}
-                      disabled={tender.status === 'closed'}
-                    >
-                      <FiShoppingCart className="mr-2" />
-                      {tender.status === 'closed' ? 'Closed' : 'Submit Bid'}
-                    </button>
+
+                    <div className="mt-8 flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-gray-500">Order Range</p>
+                        <p className="text-sm font-medium">{tender.minOrder} - {tender.maxOrder} tons</p>
+                      </div>
+                      <button
+                        className={`px-4 py-2 rounded-lg font-medium flex items-center ${tender.status === 'closed'
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-green-600 text-white hover:bg-green-700 transition-colors duration-300'
+                          }`}
+                        disabled={tender.status === 'closed'}
+                      >
+                        <FiShoppingCart className="mr-2" />
+                        {tender.status === 'closed' ? 'Closed' : 'Submit Bid'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && filteredTenders.length === 0 && (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100">
-              <FiX className="h-8 w-8 text-green-600" />
+              ))}
             </div>
-            <h3 className="mt-4 text-xl font-medium text-gray-900">No matching tenders found</h3>
-            <p className="mt-2 text-gray-500">
-              Try adjusting your search or filter criteria
-            </p>
-            <button
-              className="mt-6 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedWasteType('All');
-                setActiveTab('all');
-              }}
-            >
-              Reset Filters
-            </button>
-          </div>
-        )}
+          )
+        }
+
+        {
+          !loading && filteredTenders.length === 0 && (
+            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
+              <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100">
+                <FiX className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="mt-4 text-xl font-medium text-gray-900">No matching tenders found</h3>
+              <p className="mt-2 text-gray-500">
+                Try adjusting your search or filter criteria
+              </p>
+              <button
+                className="mt-6 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-300"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedWasteType('All');
+                  setActiveTab('all');
+                }}
+              >
+                Reset Filters
+              </button>
+            </div>
+          )
+        }
 
         {/* How It Works Section */}
         <div className="mt-16 bg-white rounded-xl shadow-lg p-8">
@@ -507,10 +514,10 @@ export default function MarketplacePage() {
             </div>
           </div>
         </div>
-      </main>
+      </main >
 
       {/* Footer */}
-      <footer className="bg-green-900 text-white mt-16">
+      < footer className="bg-green-900 text-white mt-16" >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
@@ -567,7 +574,7 @@ export default function MarketplacePage() {
             <p>© 2023 AgriLink. All rights reserved.</p>
           </div>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { FiCloud, FiTarget, FiGift, FiCreditCard, FiActivity, FiRefreshCw, FiZap, FiBarChart2 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function CO2WalletPage() {
   const [walletData, setWalletData] = useState(null);
@@ -28,7 +29,7 @@ export default function CO2WalletPage() {
         nextLevelTokens: 2000,
         lastMonthCO2: 3450
       };
-      
+
       const mockTransactions = [
         { id: 1, type: 'waste_sale', action: 'Sold Rice Straw', co2: 850, tokens: 600, date: '2023-12-15', status: 'completed' },
         { id: 2, type: 'waste_sale', action: 'Sold Wheat Straw', co2: 650, tokens: 450, date: '2023-12-10', status: 'completed' },
@@ -38,7 +39,7 @@ export default function CO2WalletPage() {
         { id: 6, type: 'renewable', action: 'Installed Rainwater Harvesting', co2: 1500, tokens: 1050, date: '2023-11-15', status: 'completed' },
         { id: 7, type: 'waste_sale', action: 'Sold Sugarcane Bagasse', co2: 2100, tokens: 1470, date: '2023-11-10', status: 'pending' },
       ];
-      
+
       const mockRedemption = [
         { id: 1, name: "Farm Equipment Discount", description: "15% off on eco-friendly farming tools", tokens: 1500, category: "farming" },
         { id: 2, name: "Solar Panel Voucher", description: "₹5000 off on solar panel installation", tokens: 3000, category: "energy" },
@@ -47,7 +48,7 @@ export default function CO2WalletPage() {
         { id: 5, name: "Tree Adoption Certificate", description: "Adopt a tree in your name", tokens: 500, category: "environment" },
         { id: 6, name: "Electric Vehicle Charger", description: "30% off on home EV charger", tokens: 2500, category: "transport" },
       ];
-      
+
       setWalletData(mockWallet);
       setTransactions(mockTransactions);
       setRedemptionOptions(mockRedemption);
@@ -103,82 +104,84 @@ export default function CO2WalletPage() {
       </div>
 
       {/* Navigation */}
-       <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        {/* Logo */}
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0 flex items-center">
-                                <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
-                            </div>
-                        </div>
-
-                        {/* Navigation Tabs */}
-                        <div className="hidden md:block">
-                            <div className="flex items-center space-x-8">
-                                <a href="/app" className="px-1 py-2 border-b-2 border-green-500 text-sm font-medium text-white">
-                                    App
-                                </a>
-                                <a href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    Marketplace
-                                </a>
-                                <a href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    Portfolio
-                                </a>
-                                <a href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
-                                    CO2 Saved
-                                </a>
-                            </div>
-                        </div>
-
-                        {/* User Profile */}
-                        <div className="flex items-center space-x-4">
-                            <div className="hidden md:block">
-                                <span className="text-green-200">Welcome, Farmer</span>
-                            </div>
-                            <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center cursor-pointer hover:bg-green-500 transition-colors duration-300">
-                                <span className="text-sm font-medium text-white">F</span>
-                            </div>
-                        </div>
-
-                        {/* Mobile menu button */}
-                        <div className="md:hidden flex items-center">
-                            <button
-                                type="button"
-                                className="inline-flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-700 focus:outline-none"
-                                aria-controls="mobile-menu"
-                                aria-expanded="false"
-                            >
-                                <span className="sr-only">Open main menu</span>
-                                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+      <nav className="bg-green-800 bg-opacity-90 backdrop-blur-md sticky top-0 z-50 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center">
+            {/* Logo */}
+            <Link href="/">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 flex items-center">
+                  <svg className="h-8 w-8 text-green-300" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span className="ml-2 text-xl font-bold text-white">AgriLink</span>
                 </div>
+              </div>
+            </Link>
 
-                {/* Mobile menu */}
-                <div className="md:hidden hidden" id="mobile-menu">
-                    <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700 bg-opacity-90">
-                        <a href="/app" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-green-800">
-                            App
-                        </a>
-                        <a href="/marketplace" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            Marketplace
-                        </a>
-                        <a href="/portfolio" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            Portfolio
-                        </a>
-                        <a href="/carbon" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
-                            CO2 Saved
-                        </a>
-                    </div>
-                </div>
-            </nav>
+            {/* Navigation Tabs */}
+            <div className="hidden md:block">
+              <div className="flex items-center space-x-8">
+                <a href="/app" className="px-1 py-2 border-b-2 border-green-500 text-sm font-medium text-white">
+                  App
+                </a>
+                <a href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                  Marketplace
+                </a>
+                <a href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                  Portfolio
+                </a>
+                <a href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                  CO2 Saved
+                </a>
+              </div>
+            </div>
+
+            {/* User Profile */}
+            <div className="flex items-center space-x-4">
+              <div className="hidden md:block">
+                <span className="text-green-200">Welcome, Farmer</span>
+              </div>
+              <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center cursor-pointer hover:bg-green-500 transition-colors duration-300">
+                <span className="text-sm font-medium text-white">F</span>
+              </div>
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center p-2 rounded-md text-green-200 hover:text-white hover:bg-green-700 focus:outline-none"
+                aria-controls="mobile-menu"
+                aria-expanded="false"
+              >
+                <span className="sr-only">Open main menu</span>
+                <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        <div className="md:hidden hidden" id="mobile-menu">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-green-700 bg-opacity-90">
+            <a href="/app" className="block px-3 py-2 rounded-md text-base font-medium text-white bg-green-800">
+              App
+            </a>
+            <a href="/marketplace" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
+              Marketplace
+            </a>
+            <a href="/portfolio" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
+              Portfolio
+            </a>
+            <a href="/carbon" className="block px-3 py-2 rounded-md text-base font-medium text-green-200 hover:text-white hover:bg-green-600">
+              CO2 Saved
+            </a>
+          </div>
+        </div>
+      </nav>
 
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-teal-700 to-green-900 text-white">
@@ -191,7 +194,7 @@ export default function CO2WalletPage() {
               <p className="text-xl text-teal-100 max-w-2xl">
                 Track, manage, and redeem the CO2 credits you've earned through sustainable farming practices.
               </p>
-              
+
               {!loading && walletData && (
                 <div className="grid grid-cols-2 gap-4 pt-4 max-w-md">
                   <div className="bg-teal-600 p-4 rounded-xl">
@@ -202,7 +205,7 @@ export default function CO2WalletPage() {
                     <p className="text-2xl font-bold mt-2">{walletData.totalCO2} kg</p>
                     <p className="text-xs opacity-80 mt-1">{walletData.equivalent}</p>
                   </div>
-                  
+
                   <div className="bg-emerald-600 p-4 rounded-xl">
                     <div className="flex items-center">
                       <FiCreditCard className="text-2xl mr-2" />
@@ -214,7 +217,7 @@ export default function CO2WalletPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="hidden md:block">
               <div className="relative">
                 <div className="absolute -top-8 -left-8 w-64 h-64 bg-teal-500 rounded-full opacity-20 animate-pulse"></div>
@@ -226,14 +229,14 @@ export default function CO2WalletPage() {
                     </div>
                     <h3 className="text-xl font-bold mb-2">Your Impact</h3>
                     <p className="text-teal-200 mb-6">{walletData?.impact}</p>
-                    
+
                     <div className="mb-6">
                       <div className="flex justify-between text-sm mb-1">
                         <span>Current Level: {walletData?.level}</span>
                         <span>Progress: {walletData?.progress}%</span>
                       </div>
                       <div className="w-full bg-teal-900 rounded-full h-4">
-                        <motion.div 
+                        <motion.div
                           className="bg-teal-500 h-4 rounded-full"
                           initial={{ width: 0 }}
                           animate={{ width: `${walletData?.progress}%` }}
@@ -244,7 +247,7 @@ export default function CO2WalletPage() {
                         Next: {walletData?.nextLevel} at {walletData?.nextLevelTokens} tokens
                       </div>
                     </div>
-                    
+
                     <div className="bg-teal-800 rounded-lg p-4">
                       <p className="text-sm">Last month you saved</p>
                       <p className="text-xl font-bold">{walletData?.lastMonthCO2} kg CO2</p>
@@ -270,7 +273,7 @@ export default function CO2WalletPage() {
               </div>
               <p className="text-xl font-bold mt-2">{walletData.totalCO2} kg</p>
             </div>
-            
+
             <div className="bg-emerald-600 text-white p-4 rounded-xl">
               <div className="flex items-center">
                 <FiCreditCard className="text-xl mr-2" />
@@ -278,14 +281,14 @@ export default function CO2WalletPage() {
               </div>
               <p className="text-xl font-bold mt-2">{walletData.totalTokens}</p>
             </div>
-            
+
             <div className="bg-teal-700 text-white p-4 rounded-xl col-span-2">
               <div className="flex items-center justify-between mb-2">
                 <span>Current Level: {walletData.level}</span>
                 <span>Progress: {walletData.progress}%</span>
               </div>
               <div className="w-full bg-teal-900 rounded-full h-3">
-                <motion.div 
+                <motion.div
                   className="bg-teal-500 h-3 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${walletData.progress}%` }}
@@ -300,21 +303,19 @@ export default function CO2WalletPage() {
         <div className="bg-white rounded-xl shadow-lg p-1 mb-8">
           <div className="flex">
             <button
-              className={`flex-1 py-4 text-center font-medium transition-colors duration-300 rounded-lg ${
-                activeTab === 'actions' 
-                  ? 'bg-teal-500 text-white' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`flex-1 py-4 text-center font-medium transition-colors duration-300 rounded-lg ${activeTab === 'actions'
+                ? 'bg-teal-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
               onClick={() => setActiveTab('actions')}
             >
               CO2 Saving Actions
             </button>
             <button
-              className={`flex-1 py-4 text-center font-medium transition-colors duration-300 rounded-lg ${
-                activeTab === 'redeem' 
-                  ? 'bg-teal-500 text-white' 
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`flex-1 py-4 text-center font-medium transition-colors duration-300 rounded-lg ${activeTab === 'redeem'
+                ? 'bg-teal-500 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
               onClick={() => setActiveTab('redeem')}
             >
               Redeem Tokens
@@ -357,8 +358,8 @@ export default function CO2WalletPage() {
                     </tr>
                   ) : transactions.length > 0 ? (
                     transactions.map((tx) => (
-                      <tr 
-                        key={tx.id} 
+                      <tr
+                        key={tx.id}
                         className="hover:bg-teal-50 transition-colors duration-200"
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -382,7 +383,7 @@ export default function CO2WalletPage() {
                           {formatDate(tx.date)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                          {tx.status === 'completed' 
+                          {tx.status === 'completed'
                             ? <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Completed</span>
                             : <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Pending</span>}
                         </td>
@@ -413,7 +414,7 @@ export default function CO2WalletPage() {
             <div className="mb-8 bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">Available Redemptions</h2>
               <p className="text-gray-600 mb-6">Redeem your tokens for valuable rewards and discounts</p>
-              
+
               {!loading && walletData && (
                 <div className="bg-teal-50 border-l-4 border-teal-500 p-4 rounded-lg mb-6">
                   <div className="flex items-center">
@@ -425,10 +426,10 @@ export default function CO2WalletPage() {
                   </div>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {redemptionOptions.map(option => (
-                  <motion.div 
+                  <motion.div
                     key={option.id}
                     className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                     whileHover={{ y: -5 }}
@@ -443,7 +444,7 @@ export default function CO2WalletPage() {
                           {option.tokens} tokens
                         </div>
                       </div>
-                      
+
                       <div className="mt-6">
                         <button
                           onClick={() => redeemTokens(option)}
@@ -458,7 +459,7 @@ export default function CO2WalletPage() {
                 ))}
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-4">How CO2 Credits Work</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -469,7 +470,7 @@ export default function CO2WalletPage() {
                     Perform sustainable actions like selling agricultural waste, using renewable energy, or eco-friendly farming.
                   </p>
                 </div>
-                
+
                 <div className="border border-gray-200 rounded-lg p-6">
                   <div className="text-teal-600 text-3xl mb-4">2</div>
                   <h3 className="text-lg font-medium text-gray-800 mb-2">Accumulate Tokens</h3>
@@ -477,7 +478,7 @@ export default function CO2WalletPage() {
                     Each action converts CO2 savings into tokens stored in your digital wallet.
                   </p>
                 </div>
-                
+
                 <div className="border border-gray-200 rounded-lg p-6">
                   <div className="text-teal-600 text-3xl mb-4">3</div>
                   <h3 className="text-lg font-medium text-gray-800 mb-2">Redeem Rewards</h3>
@@ -496,24 +497,24 @@ export default function CO2WalletPage() {
             <h2 className="text-xl font-bold text-gray-800">Your Environmental Impact</h2>
             <div className="text-sm text-gray-500">Last 6 months</div>
           </div>
-          
+
           <div className="h-64 flex items-end justify-center space-x-2 pb-6">
             {[65, 80, 120, 180, 210, 240].map((height, index) => (
-              <motion.div 
-                key={index} 
+              <motion.div
+                key={index}
                 className="relative flex flex-col items-center w-12"
                 initial={{ height: 0 }}
                 animate={{ height: `${height}px` }}
                 transition={{ duration: 1, delay: index * 0.1 }}
               >
-                <div 
+                <div
                   className="w-full bg-gradient-to-t from-teal-500 to-emerald-400 rounded-t-lg"
                 />
                 <div className="mt-2 text-xs text-gray-500">{['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}</div>
               </motion.div>
             ))}
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-teal-50 p-4 rounded-lg">
               <p className="text-sm text-gray-500">Equivalent Trees Planted</p>
@@ -547,12 +548,12 @@ export default function CO2WalletPage() {
               <p className="text-gray-600 mb-6">
                 You are about to redeem <span className="font-bold">{selectedRedemption.tokens} tokens</span> for:
               </p>
-              
+
               <div className="bg-teal-50 rounded-lg p-4 mb-6">
                 <h4 className="font-bold text-lg">{selectedRedemption.name}</h4>
                 <p className="text-gray-600">{selectedRedemption.description}</p>
               </div>
-              
+
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={() => setShowConfirmation(false)}
@@ -587,7 +588,7 @@ export default function CO2WalletPage() {
                 Building a sustainable future through agricultural innovation.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2 text-green-200">
@@ -597,7 +598,7 @@ export default function CO2WalletPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Rewards Program</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-green-200">
@@ -607,7 +608,7 @@ export default function CO2WalletPage() {
                 <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-lg font-semibold mb-4">Contact Support</h3>
               <p className="text-green-200 mb-4">
@@ -618,7 +619,7 @@ export default function CO2WalletPage() {
               </button>
             </div>
           </div>
-          
+
           <div className="mt-12 pt-8 border-t border-green-800 text-center text-green-300">
             <p>© 2023 AgriLink. All rights reserved.</p>
           </div>
