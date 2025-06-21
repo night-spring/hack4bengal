@@ -1,35 +1,32 @@
-from aptc import Account, new_client, entry_function_natural, Serializer
+from aptos_sdk.account import Account
+from aptos_sdk.client import FaucetClient, RestClient
+from aptos_sdk.transactions import EntryFunction, TransactionPayload
+from aptos_sdk.type_tag import TypeTag
+from aptos_sdk.bcs import Serializer
 import os
-import time
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Create a client with faucet support (for testnet usage only)
-client = new_client(faucet=True)
+NODE_URL = "https://fullnode.mainnet.aptoslabs.com"
+rest_client = RestClient(NODE_URL)
+
 account = Account.generate()
 
-# Optionally fund the account (for testnet)
-client.deposit(account.address())
-
-def mint_co2_token(farmer_address: str, kg_saved: int, action_desc: str):
-    payload = entry_function_natural(
-        f"{account.address()}::co2_credit",
+def mint_co2_token(farmer_address, kg_saved, action_desc):
+    payload = EntryFunction.natural(
+        f"{os.getenv('APTOS_ACCOUNT_ADDRESS')}::co2_credit",
         "mint_token",
         [],
         [
-            Serializer.struct(account.address()),
+            Serializer.struct(account.address()),  # signer
             Serializer.struct(farmer_address),
             Serializer.u64(kg_saved),
             Serializer.str(action_desc),
-            Serializer.u64(int(time.time())),
+            Serializer.u64(Serializer.u64_from_int(time.time()))
         ],
     )
 
-    txn_hash = client.submit_transaction(account, payload)
-    client.wait_for_transaction(txn_hash)
+    txn_hash = rest_client.submit_transaction(account, payload)
+    rest_client.wait_for_transaction(txn_hash)
     print(f"✅ Token minted: {txn_hash}")
-
-# Example usage
-# Replace with a real testnet address if needed
-# mint_co2_token("0x...", 100, "Planted trees")
