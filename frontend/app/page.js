@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useUser } from '@civic/auth/react';
 import { LoaderCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Home() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function Home() {
                 }
               }}>
                 <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                {signinBtnLoading==false ? <>
+                {signinBtnLoading == false ? <>
                   {user ? <>Log out</> : <>
                     Get Started
                   </>}
@@ -131,7 +132,8 @@ export default function Home() {
           </div>
         </div>
         <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <img
+          <Image
+            height={50} width="100%"
             className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full lg:object-contain lg:object-right"
             src="https://earth.org/wp-content/uploads/2022/03/Untitled-design-2022-03-18T144807.712.jpg"
             alt="Farmer using AgriLink app"
@@ -392,7 +394,7 @@ export default function Home() {
               data-aos-delay="100"
             >
               <div className="flex items-center mb-6">
-                <img className="h-14 w-14 rounded-full border-2 border-green-200" src="/farmer-avatar.jpg" alt="Farmer" />
+                <Image height={14} width={14} className="h-14 w-14 rounded-full border-2 border-green-200" src="/farmer-avatar.jpg" alt="Farmer" />
                 <div className="ml-4">
                   <h4 className="text-lg font-bold text-gray-900">Rajesh Kumar</h4>
                   <p className="text-green-600">Rice Farmer, Punjab</p>
@@ -417,7 +419,7 @@ export default function Home() {
               data-aos-delay="200"
             >
               <div className="flex items-center mb-6">
-                <img className="h-14 w-14 rounded-full border-2 border-blue-200" src="/industry-avatar.jpg" alt="Industry" />
+                <Image height={14} width={14} className="h-14 w-14 rounded-full border-2 border-blue-200" src="/industry-avatar.jpg" alt="Industry" />
                 <div className="ml-4">
                   <h4 className="text-lg font-bold text-gray-900">Priya Sharma</h4>
                   <p className="text-blue-600">Biomass Plant Manager</p>
@@ -442,7 +444,7 @@ export default function Home() {
               data-aos-delay="300"
             >
               <div className="flex items-center mb-6">
-                <img className="h-14 w-14 rounded-full border-2 border-purple-200" src="/env-avatar.jpg" alt="Environmentalist" />
+                <Image height={14} width={14} className="h-14 w-14 rounded-full border-2 border-purple-200" src="/env-avatar.jpg" alt="Environmentalist" />
                 <div className="ml-4">
                   <h4 className="text-lg font-bold text-gray-900">Dr. Amit Patel</h4>
                   <p className="text-purple-600">Environmental Scientist</p>

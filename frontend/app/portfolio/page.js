@@ -5,6 +5,7 @@ import { useUser } from '@civic/auth/react';
 import { FiFilter, FiSearch, FiDollarSign, FiTrendingUp, FiCalendar, FiPackage, FiRefreshCw, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { getWasteListingsByUser } from '../actions/mongodbfunctions';
 import Navbar from '../components/Navbar';
+import Image from 'next/image';
 
 export default function PortfolioPage() {
   const { user } = useUser();
@@ -287,31 +288,28 @@ export default function PortfolioPage() {
             <div className="flex space-x-4">
               <div className="flex space-x-2">
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeFilter === 'all'
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${activeFilter === 'all'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                    }`}
                   onClick={() => setActiveFilter('all')}
                 >
                   All
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeFilter === 'completed'
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${activeFilter === 'completed'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                    }`}
                   onClick={() => setActiveFilter('completed')}
                 >
                   Completed
                 </button>
                 <button
-                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                    activeFilter === 'pending'
+                  className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${activeFilter === 'pending'
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                    }`}
                   onClick={() => setActiveFilter('pending')}
                 >
                   Pending
@@ -403,7 +401,9 @@ export default function PortfolioPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           {sale.imageUrl ? (
-                            <img
+                            <Image
+                              height={10}
+                              width={10}
                               src={sale.imageUrl}
                               alt={sale.item}
                               className="h-10 w-10 rounded-full object-cover"

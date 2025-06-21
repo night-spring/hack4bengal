@@ -8,6 +8,7 @@ import { uploadWasteData } from '../actions/mongodbfunctions';
 import Link from 'next/link';
 import { useUser } from '@civic/auth/react'; // Add this import
 import Navbar from '../components/Navbar';
+import Image from 'next/image';
 export default function AppPage() {
     const { user } = useUser(); // Get the user from Civic auth
     const [image, setImage] = useState(null);
@@ -159,7 +160,7 @@ export default function AppPage() {
         }));
     };
 
-      const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
@@ -285,7 +286,8 @@ export default function AppPage() {
                                     <>
                                         {preview ? (
                                             <div className="relative" data-aos="zoom-in">
-                                                <img
+                                                <Image
+
                                                     src={preview}
                                                     alt="Waste preview"
                                                     className="h-64 w-full object-cover rounded-lg border-2 border-dashed border-green-300"
@@ -657,7 +659,7 @@ export default function AppPage() {
                                     {preview && (
                                         <div className="sm:col-span-2">
                                             <p className="text-sm font-medium text-gray-500">Uploaded Image</p>
-                                            <img
+                                            <Image
                                                 src={preview}
                                                 alt="Waste preview"
                                                 className="mt-2 h-48 w-full object-contain rounded-lg border border-gray-200"
