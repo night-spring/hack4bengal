@@ -2,10 +2,9 @@
 import { useState, useRef } from 'react';
 import Head from 'next/head';
 import { FiUpload, FiCamera, FiInfo, FiCheckCircle, FiXCircle, FiEdit2 } from 'react-icons/fi';
-import { uploadWasteInfo, uploadWasteImage } from "../actions/mongodbfunctions"
+import { uploadWasteInfo, uploadWasteImage } from "../actions/mongodbfunctions";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadWasteData } from '../actions/mongodbfunctions';
-
 
 export default function AppPage() {
     const [image, setImage] = useState(null);
@@ -24,54 +23,9 @@ export default function AppPage() {
         additionalNotes: ''
     });
     const fileInputRef = useRef(null);
-    const [step, setStep] = useState(1); // 1: upload, 2: form, 3: results
-    const [inputMethod, setInputMethod] = useState('image'); // Added state for inputMethod
-    const [description, setDescription] = useState(''); // Added state for description
-
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
-            setPreview(URL.createObjectURL(file));
-            setIsLoading(true);
-
-            try {
-                // Mock AI classification
-                const mockResults = {
-                    cropType: getRandomCropType(),
-                    confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-                    moistureLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-                    estimatedValue: Math.floor(Math.random() * 5000) + 1000
-                };
-
-                const finalFormData = {
-                    ...formData,
-                    cropType: mockResults.cropType,
-                    moistureLevel: mockResults.moistureLevel,
-                    estimatedValue: mockResults.estimatedValue,
-                    confidence: mockResults.confidence
-                };
-
-                // Convert file to base64 for server action
-                const base64Image = await convertFileToBase64(file);
-
-                // Upload to MongoDB + Supabase
-                const result = await uploadWasteData({
-                    formData: finalFormData,
-                    imageBase64: base64Image
-                });
-
-                setClassificationResult(mockResults);
-                setFormData(finalFormData);
-                setStep(2);
-            } catch (err) {
-                console.error("Upload failed:", err);
-                alert("Something went wrong while uploading data. Please try again.");
-            } finally {
-                setIsLoading(false);
-            }
-        }
-    };
+    const [step, setStep] = useState(1);
+    const [inputMethod, setInputMethod] = useState('image');
+    const [description, setDescription] = useState('');
 
     // Helper function to convert file to base64
     const convertFileToBase64 = (file) => {
@@ -82,33 +36,104 @@ export default function AppPage() {
             reader.onerror = error => reject(error);
         });
     };
-    const getRandomCropType = () => {
-        const types = [
-            'Rice',
-            'Wheat',
-            'Sugarcane'
-        ];
-        return types[Math.floor(Math.random() * types.length)];
+
+    // Call Gemini API for waste analysis
+    const analyzeWaste = async (data) => {
+        try {
+            const response = await fetch('/api/gemini', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!response) {
+                throw new Error('No response from server');
+            }
+
+            const text = await response.text();
+            if (!text) {
+                throw new Error('Empty response from server');
+            }
+
+            try {
+                const result = JSON.parse(text);
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to analyze waste');
+                }
+                return result;
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
+        } catch (error) {
+            console.error('Error analyzing waste:', error);
+            throw new Error(error.message || 'Failed to analyze waste. Please try again.');
+        }
     };
 
-    const handleDescriptionSubmit = () => {
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setImage(file);
+        setPreview(URL.createObjectURL(file));
+    };
+
+    const handleDescriptionSubmit = async () => {
+        if (!description.trim()) {
+            alert("Please provide a description of the waste");
+            return;
+        }
+        
         setIsLoading(true);
-        setTimeout(() => {
-            const mockResults = {
-                cropType: getRandomCropType(),
-                confidence: (Math.random() * 0.5 + 0.5).toFixed(2),
-                moistureLevel: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)],
-                estimatedValue: Math.floor(Math.random() * 5000) + 1000
+        
+        try {
+            let dataToSend = { analysisType: 'text', description: description };
+            
+            // If image is available, include it in the analysis
+            if (image) {
+                const base64Image = await convertFileToBase64(image);
+                dataToSend = {
+                    ...dataToSend,
+                    analysisType: 'both',
+                    image: base64Image
+                };
+            }
+
+            // Send data to Gemini API
+            const geminiResponse = await analyzeWaste(dataToSend);
+
+            // Map Gemini response to our form structure
+            const geminiData = {
+                cropType: geminiResponse.cropType || '',
+                wasteDescription: description, // Use the user-provided description
+                moistureLevel: geminiResponse.moistureLevel || '',
+                ageOfWaste: geminiResponse.ageOfWaste || '',
             };
-            setClassificationResult(mockResults);
+
+            // Update form data with Gemini's analysis
             setFormData(prev => ({
                 ...prev,
-                cropType: mockResults.cropType,
-                moistureLevel: mockResults.moistureLevel
+                ...geminiData
             }));
-            setIsLoading(false);
+
+            // Set classification result for display
+            setClassificationResult({
+                cropType: geminiResponse.cropType,
+                confidence: geminiResponse.confidence,
+                moistureLevel: geminiResponse.moistureLevel,
+                estimatedValue: geminiResponse.estimatedValue
+            });
+
             setStep(2);
-        }, 1500);
+        } catch (err) {
+            console.error("Analysis failed:", err);
+            alert(err.message || "Something went wrong while analyzing. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleInputChange = (e) => {
@@ -119,37 +144,29 @@ export default function AppPage() {
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
+   const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-        try {
-            // Convert image to base64 if it exists
-            const imageBase64 = image ? await convertFileToBase64(image) : null;
+  try {
+    // Convert image to base64 if it exists
+    const imageBase64 = image ? await convertFileToBase64(image) : null;
 
-            await uploadWasteInfo({
-                classificationResult,
-                formData,
-                imageBase64
-            });
+    // Prepare final data for MongoDB
+    await uploadWasteInfo({ 
+      classificationResult, 
+      formData,
+      imageBase64
+    });
 
-            setStep(3);
-        } catch (err) {
-            console.error("Submission failed:", err);
-            alert("Something went wrong while submitting. Please try again.");
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    function handleFileChange(e) {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        const url = URL.createObjectURL(file);
-        setImage(url);
-    }
-
+    setStep(3);
+  } catch (err) {
+    console.error("Submission failed:", err);
+    alert("Something went wrong while submitting. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
     const resetProcess = () => {
         setImage(null);
         setPreview(null);
@@ -205,10 +222,10 @@ export default function AppPage() {
                                 <a href="/marketplace" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
                                     Marketplace
                                 </a>
-                                <a href="#" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                                <a href="/portfolio" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
                                     Portfolio
                                 </a>
-                                <a href="#" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
+                                <a href="/carbon" className="px-1 py-2 border-b-2 border-transparent text-sm font-medium text-green-200 hover:text-white hover:border-green-300 transition-colors duration-300">
                                     CO2 Saved
                                 </a>
                             </div>
@@ -296,121 +313,123 @@ export default function AppPage() {
                     </div>
 
                     {/* Step 1: Image Upload or Description */}
-                    {step === 1 && (
-                        <div className="p-8" data-aos="fade-up">
-                            <div className="text-center">
-                                <h2 className="text-2xl font-bold text-gray-800">Upload or Describe Waste</h2>
-                                <p className="mt-2 text-gray-600">
-                                    Upload a photo or provide a description of your agricultural waste for AI classification
-                                </p>
-                            </div>
+                    {/* Step 1: Image Upload or Description */}
+    {step === 1 && (
+        <div className="p-8" data-aos="fade-up">
+            <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-800">Upload or Describe Waste</h2>
+                <p className="mt-2 text-gray-600">
+                    Upload a photo (optional) and provide a description (required) of your agricultural waste
+                </p>
+            </div>
 
-                            <div className="mt-6 flex justify-center space-x-4">
+            <div className="mt-6 flex justify-center space-x-4">
+                <button
+                    onClick={() => setInputMethod('image')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'image' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                    Upload Image
+                </button>
+                <button
+                    onClick={() => setInputMethod('text')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'text' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                >
+                    Describe Waste
+                </button>
+            </div>
+
+            <div className="mt-8 flex flex-col items-center">
+                {inputMethod === 'image' && (
+                    <>
+                        {preview ? (
+                            <div className="relative" data-aos="zoom-in">
+                                <img
+                                    src={preview}
+                                    alt="Waste preview"
+                                    className="h-64 w-full object-cover rounded-lg border-2 border-dashed border-green-300"
+                                />
                                 <button
-                                    onClick={() => setInputMethod('image')}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'image' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-                                    Upload Image
-                                </button>
-                                <button
-                                    onClick={() => setInputMethod('text')}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'text' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                                    onClick={() => {
+                                        setImage(null);
+                                        setPreview(null);
+                                    }}
+                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                                 >
-                                    Describe Waste
+                                    <FiXCircle className="h-5 w-5" />
                                 </button>
-                            </div>
-
-                            <div className="mt-8 flex flex-col items-center">
-                                {inputMethod === 'image' ? (
-                                    <>
-                                        {preview ? (
-                                            <div className="relative" data-aos="zoom-in">
-                                                <img
-                                                    src={preview}
-                                                    alt="Waste preview"
-                                                    className="h-64 w-full object-cover rounded-lg border-2 border-dashed border-green-300"
-                                                />
-                                                {isLoading && (
-                                                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-lg">
-                                                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div
-                                                className="h-64 w-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-green-400 transition-colors duration-300 group"
-                                                onClick={() => fileInputRef.current.click()}
-                                                data-aos="fade-up"
-                                                data-aos-delay="100"
-                                            >
-                                                <FiUpload className="h-12 w-12 text-gray-400 group-hover:text-green-500 transition-colors duration-300" />
-                                                <p className="mt-2 text-gray-600">Click to upload or drag and drop</p>
-                                                <p className="text-sm text-gray-500">JPG, PNG up to 5MB</p>
-                                            </div>
-                                        )}
-                                        <input
-                                            ref={fileInputRef}
-                                            type="file"
-                                            name="file"
-                                            accept="image/*"
-                                            onChange={handleImageUpload}
-                                            className='hidden'
-                                        />
-                                        <div className="mt-6">
-                                            <button
-                                                type="button"
-                                                onClick={() => fileInputRef.current.click()}
-                                                className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
-                                                data-aos="fade-up"
-                                                data-aos-delay="200"
-                                            >
-                                                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                                                <FiCamera className="mr-2 inline" />
-                                                {preview ? 'Take Another Photo' : 'Take Photo'}
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <div className="w-full max-w-md" data-aos="fade-up" data-aos-delay="100">
-                                        <textarea
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            className="w-full h-40 p-4 border-2 border-gray-300 rounded-lg bg-white text-black focus:ring-green-500 focus:border-green-500 transition-all duration-300"
-                                            placeholder="Describe your agricultural waste (e.g., type, condition, approximate quantity)..."
-                                        />
-
-                                        <div className="mt-4 flex justify-center">
-                                            <button
-                                                onClick={handleDescriptionSubmit}
-                                                className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300 disabled:opacity-50"
-                                                disabled={!description.trim() || isLoading}
-                                                data-aos="fade-up"
-                                                data-aos-delay="200"
-                                            >
-                                                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                                                <FiEdit2 className="mr-2 inline" />
-                                                {isLoading ? 'Processing...' : 'Submit Description'}
-                                            </button>
-                                        </div>
+                                {isLoading && (
+                                    <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-lg">
+                                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
                                     </div>
                                 )}
                             </div>
-
-                            <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded" data-aos="fade-up" data-aos-delay="300">
-                                <div className="flex">
-                                    <div className="flex-shrink-0">
-                                        <FiInfo className="h-5 w-5 text-yellow-400" />
-                                    </div>
-                                    <div className="ml-3">
-                                        <p className="text-sm text-yellow-700">
-                                            {inputMethod === 'image'
-                                                ? 'For best results: Take clear photos in daylight, showing the waste pile from multiple angles if possible.'
-                                                : 'Provide detailed information about the waste type, condition, and quantity for accurate classification.'}
-                                        </p>
-                                    </div>
-                                </div>
+                        ) : (
+                            <div
+                                className="h-64 w-full border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-green-400 transition-colors duration-300 group"
+                                onClick={() => fileInputRef.current.click()}
+                                data-aos="fade-up"
+                                data-aos-delay="100"
+                            >
+                                <FiUpload className="h-12 w-12 text-gray-400 group-hover:text-green-500 transition-colors duration-300" />
+                                <p className="mt-2 text-gray-600">Click to upload (optional)</p>
+                                <p className="text-sm text-gray-500">JPG, PNG up to 5MB</p>
                             </div>
-                        </div>
-                    )}
+                        )}
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            name="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className='hidden'
+                        />
+                    </>
+                )}
+
+                {/* Description Field (Always Visible) */}
+                <div className="w-full max-w-md mt-6" data-aos="fade-up" data-aos-delay="200">
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                        Waste Description <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        id="description"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full h-40 p-4 border-2 border-gray-300 rounded-lg bg-white text-black focus:ring-green-500 focus:border-green-500 transition-all duration-300"
+                        placeholder="Describe your agricultural waste (e.g., type, condition, approximate quantity)..."
+                        required
+                    />
+                </div>
+
+                <div className="mt-6">
+                    <button
+                        onClick={handleDescriptionSubmit}
+                        className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300 disabled:opacity-50"
+                        disabled={!description.trim() || isLoading}
+                        data-aos="fade-up"
+                        data-aos-delay="300"
+                    >
+                        <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                        <FiEdit2 className="mr-2 inline" />
+                        {isLoading ? 'Processing...' : 'Submit Waste Information'}
+                    </button>
+                </div>
+            </div>
+
+            <div className="mt-8 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded" data-aos="fade-up" data-aos-delay="400">
+                <div className="flex">
+                    <div className="flex-shrink-0">
+                        <FiInfo className="h-5 w-5 text-yellow-400" />
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm text-yellow-700">
+                            For best results: Provide a detailed description of your waste. 
+                            Adding a photo can help improve the accuracy of the analysis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )}
 
                     {/* Step 2: Waste Details Form */}
                     {step === 2 && (

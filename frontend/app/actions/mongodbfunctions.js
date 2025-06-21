@@ -38,8 +38,17 @@ export const withCollection = async (collectionName, fn) => {
 
 // Helper function to convert base64 to blob
 function base64ToBlob(base64Data) {
-  const byteString = atob(base64Data.split(',')[1]);
-  const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
+  // Return null if no data is provided
+  if (!base64Data) return null;
+  
+  // Split the base64 string
+  const parts = base64Data.split(';base64,');
+  if (parts.length < 2) {
+    throw new Error("Invalid base64 string format");
+  }
+  
+  const mimeType = parts[0].split(':')[1];
+  const byteString = atob(parts[1]);
   const ab = new ArrayBuffer(byteString.length);
   const ia = new Uint8Array(ab);
 
@@ -47,15 +56,21 @@ function base64ToBlob(base64Data) {
     ia[i] = byteString.charCodeAt(i);
   }
 
-  return new Blob([ab], { type: mimeString });
+  return new Blob([ab], { type: mimeType });
 }
 
 // Upload image to Supabase
 export async function uploadWasteImage(imageBase64) {
   try {
+    // Return null if no image is provided
+    if (!imageBase64) return null;
+    
     const imageName = uuidv4();
     const filePath = `wasteMaterialImage/${imageName}`;
     const blob = base64ToBlob(imageBase64);
+    
+    if (!blob) return null;
+    
     const file = new File([blob], imageName, { type: blob.type });
 
     const { error } = await supabaseClient.storage
@@ -80,50 +95,33 @@ export async function uploadWasteImage(imageBase64) {
     };
   } catch (error) {
     console.error("Error in uploadWasteImage:", error);
-    throw error;
+    return null;
   }
 }
 
-// Upload form data + image to MongoDB
-export async function uploadWasteData({ formData, imageBase64 }) {
-  try {
-    const imageUploadResult = await uploadWasteImage(imageBase64);
-
-    const wasteDoc = {
-      ...formData,
-      imageUrl: imageUploadResult.imageUrl,
-      imageName: imageUploadResult.imageName,
-      createdAt: new Date(),
-    };
-
-    return withCollection("wasteMaterial", async (collection) => {
-      const result = await collection.insertOne(wasteDoc);
-      return { success: true, insertedId: result.insertedId.toString() };
-    });
-  } catch (error) {
-    console.error("Error in uploadWasteData:", error);
-    throw error;
-  }
-}
-
-// Upload waste info (without image)
+// Upload waste info (with optional image)
 export async function uploadWasteInfo({ classificationResult, formData, imageBase64 = null }) {
   try {
     let imageUploadResult = null;
 
+    // Only upload image if provided
     if (imageBase64) {
       imageUploadResult = await uploadWasteImage(imageBase64);
     }
 
     const wasteDoc = {
       ...formData,
-      ...(imageUploadResult ? {
-        imageUrl: imageUploadResult.imageUrl,
-        imageName: imageUploadResult.imageName
-      } : {}),
       classificationResult,
       createdAt: new Date(),
+      status: "pending",
+      userId: "current_user_id", // Replace with actual user ID
     };
+
+    // Add image details if available
+    if (imageUploadResult) {
+      wasteDoc.imageUrl = imageUploadResult.imageUrl;
+      wasteDoc.imageName = imageUploadResult.imageName;
+    }
 
     return withCollection("wasteMaterial", async (collection) => {
       const result = await collection.insertOne(wasteDoc);
@@ -134,7 +132,6 @@ export async function uploadWasteInfo({ classificationResult, formData, imageBas
     throw error;
   }
 }
-
 
 export async function getMockTenders() {
   return withCollection("marketplaceWasteData", async (mockTenderCollection) => {
