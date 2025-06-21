@@ -4,7 +4,7 @@ import { MongoClient } from "mongodb";
 import { mongoClientCS } from "../../lib/mongodbconnector";
 import { createClient } from "@supabase/supabase-js";
 import { v4 as uuidv4 } from "uuid";
-
+import { ObjectId } from 'mongodb';
 // Supabase setup
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -29,13 +29,76 @@ export const withCollection = async (collectionName, fn) => {
   try {
     const db = await initDB();
     const collection = db.collection(collectionName);
-    return await fn(collection);
+    const result = await fn(collection);
+    
+    // Ensure the connection is closed after operation
+    await client.close();
+    return result;
   } catch (error) {
     console.error(`Database operation failed for ${collectionName}:`, error);
-    throw error;
+    
+    // Ensure connection is closed even if error occurs
+    if (client) {
+      await client.close();
+    }
+    
+    throw new Error(`Database operation failed: ${error.message}`);
   }
 };
 
+// Update waste listing (with user verification)
+export async function updateWasteListing(listingId, userId, updateData) {
+  return withCollection("wasteMaterial", async (collection) => {
+    // First verify the listing belongs to the user
+    const existing = await collection.findOne({ 
+      _id: new ObjectId(listingId), 
+      userId 
+    });
+    
+    if (!existing) {
+      throw new Error("Listing not found or not owned by user");
+    }
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(listingId) },
+      { 
+        $set: {
+          ...updateData,
+          lastUpdated: new Date()
+        } 
+      }
+    );
+    
+    return { 
+      success: result.modifiedCount === 1,
+      modifiedCount: result.modifiedCount
+    };
+  });
+}
+
+// Delete waste listing (with user verification)
+export async function deleteWasteListing(listingId, userId) {
+  return withCollection("wasteMaterial", async (collection) => {
+    // First verify the listing belongs to the user
+    const existing = await collection.findOne({ 
+      _id: new ObjectId(listingId), 
+      userId 
+    });
+    
+    if (!existing) {
+      throw new Error("Listing not found or not owned by user");
+    }
+
+    const result = await collection.deleteOne({ 
+      _id: new ObjectId(listingId) 
+    });
+    
+    return { 
+      success: result.deletedCount === 1,
+      deletedCount: result.deletedCount
+    };
+  });
+}
 // Helper function to convert base64 to blob
 function base64ToBlob(base64Data) {
   // Return null if no data is provided
@@ -100,7 +163,14 @@ export async function uploadWasteImage(imageBase64) {
 }
 
 // Upload waste info (with optional image)
-export async function uploadWasteInfo({ classificationResult, formData, imageBase64 = null }) {
+// Upload waste info (with optional image)
+export async function uploadWasteInfo({ 
+  classificationResult, 
+  formData, 
+  imageBase64 = null,
+  userId,           // Add userId parameter
+  userName          // Add userName parameter
+}) {
   try {
     let imageUploadResult = null;
 
@@ -114,7 +184,9 @@ export async function uploadWasteInfo({ classificationResult, formData, imageBas
       classificationResult,
       createdAt: new Date(),
       status: "pending",
-      userId: "current_user_id", // Replace with actual user ID
+      userId: userId || "anonymous", // Use provided userId or default to "anonymous"
+      userName: userName || "Anonymous User", // Use provided userName or default
+      lastUpdated: new Date()
     };
 
     // Add image details if available
@@ -125,14 +197,24 @@ export async function uploadWasteInfo({ classificationResult, formData, imageBas
 
     return withCollection("wasteMaterial", async (collection) => {
       const result = await collection.insertOne(wasteDoc);
-      return { success: true, insertedId: result.insertedId.toString() };
+      return { 
+        success: true, 
+        insertedId: result.insertedId.toString(),
+        userId: userId // Return userId in response if needed
+      };
     });
   } catch (error) {
     console.error("Error in uploadWasteInfo:", error);
     throw error;
   }
 }
-
+// Get waste listings by user ID
+export async function getWasteListingsByUser(userId) {
+  return withCollection("wasteMaterial", async (collection) => {
+    const result = await collection.find({ userId }).sort({ createdAt: -1 }).toArray();
+    return JSON.parse(JSON.stringify(result));
+  });
+}
 export async function getMockTenders() {
   return withCollection("marketplaceWasteData", async (mockTenderCollection) => {
     const result = await mockTenderCollection.find({}).toArray();

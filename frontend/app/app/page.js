@@ -6,8 +6,10 @@ import { uploadWasteInfo, uploadWasteImage } from "../actions/mongodbfunctions";
 import { v4 as uuidv4 } from 'uuid';
 import { uploadWasteData } from '../actions/mongodbfunctions';
 import Link from 'next/link';
+import { useUser } from '@civic/auth/react'; // Add this import
 
 export default function AppPage() {
+    const { user } = useUser(); // Get the user from Civic auth
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
     const [classificationResult, setClassificationResult] = useState(null);
@@ -145,7 +147,7 @@ export default function AppPage() {
         }));
     };
 
-    const handleSubmit = async (e) => {
+      const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
@@ -153,11 +155,13 @@ export default function AppPage() {
             // Convert image to base64 if it exists
             const imageBase64 = image ? await convertFileToBase64(image) : null;
 
-            // Prepare final data for MongoDB
+            // Prepare final data for MongoDB including user ID
             await uploadWasteInfo({
                 classificationResult,
                 formData,
-                imageBase64
+                imageBase64,
+                userId: user?.id, // Add the user ID from Civic auth
+                userName: user?.name || user?.email || 'Anonymous' // Add user name/email if available
             });
 
             setStep(3);
@@ -168,6 +172,7 @@ export default function AppPage() {
             setIsLoading(false);
         }
     };
+    
     const resetProcess = () => {
         setImage(null);
         setPreview(null);
