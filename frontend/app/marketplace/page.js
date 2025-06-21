@@ -1,9 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
-import Head from 'next/head';
 import { FiFilter, FiSearch, FiShoppingCart, FiTrendingUp, FiMapPin, FiClock, FiCheck, FiX, FiDollarSign } from 'react-icons/fi';
-
+import { motion } from 'framer-motion';
+import Head from 'next/head';
 export default function MarketplacePage() {
+  // Set page title
+  useEffect(() => {
+    document.title = "AgriLink | Marketplace";
+  }, []);
   const [tenders, setTenders] = useState([]);
   const [filteredTenders, setFilteredTenders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
