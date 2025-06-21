@@ -2,6 +2,10 @@
 import { useState, useRef } from 'react';
 import Head from 'next/head';
 import { FiUpload, FiCamera, FiInfo, FiCheckCircle, FiXCircle, FiEdit2 } from 'react-icons/fi';
+import { uploadWasteInfo, uploadWasteImage } from "../actions/mongodbfunctions"
+import { v4 as uuidv4 } from 'uuid';
+
+
 
 export default function AppPage() {
     const [image, setImage] = useState(null);
@@ -90,14 +94,28 @@ export default function AppPage() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
-            setStep(3);
-        }, 1000);
+        const imageFile = e.get('file');
+
+        await uploadWasteImage({ imageFile: imageFile });
+
+
+        await uploadWasteInfo({ classificationResult, formData });
+        setIsLoading(false);
+        setStep(3);
+        console.log("classificationResult: ", classificationResult);
+        console.log("formdata: ", formData);
     };
+
+    function handleFileChange(e) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const url = URL.createObjectURL(file);
+        setImage(url);
+    }
+
 
     const resetProcess = () => {
         setImage(null);
@@ -254,8 +272,7 @@ export default function AppPage() {
                             <div className="mt-6 flex justify-center space-x-4">
                                 <button
                                     onClick={() => setInputMethod('image')}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'image' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                                >
+                                    className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${inputMethod === 'image' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
                                     Upload Image
                                 </button>
                                 <button
@@ -294,25 +311,26 @@ export default function AppPage() {
                                                 <p className="text-sm text-gray-500">JPG, PNG up to 5MB</p>
                                             </div>
                                         )}
-                                        <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleImageUpload}
-                                            accept="image/*"
-                                            className="hidden"
-                                        />
-                                        <div className="mt-6">
-                                            <button
-                                                onClick={() => fileInputRef.current.click()}
-                                                className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
-                                                data-aos="fade-up"
-                                                data-aos-delay="200"
-                                            >
-                                                <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
-                                                <FiCamera className="mr-2 inline" />
-                                                {preview ? 'Take Another Photo' : 'Take Photo'}
-                                            </button>
-                                        </div>
+                                        <form action={handleSubmit} encType="multipart/form-data">
+
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file" name="file" accept="image/*" onChange={handleFileChange} required
+                                                className='hidden'
+                                            />
+                                            <div className="mt-6">
+                                                <button type='submit'
+                                                    onClick={() => fileInputRef.current.click()}
+                                                    className="relative group px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300"
+                                                    data-aos="fade-up"
+                                                    data-aos-delay="200"
+                                                >
+                                                    <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></span>
+                                                    <FiCamera className="mr-2 inline" />
+                                                    {preview ? 'Take Another Photo' : 'Take Photo'}
+                                                </button>
+                                            </div>
+                                        </form>
                                     </>
                                 ) : (
                                     <div className="w-full max-w-md" data-aos="fade-up" data-aos-delay="100">
@@ -545,6 +563,7 @@ export default function AppPage() {
                                             disabled={isLoading}
                                             data-aos="fade-up"
                                             data-aos-delay="100"
+
                                         >
                                             <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
                                             {isLoading ? 'Processing...' : 'Submit Waste Listing'}
@@ -673,7 +692,7 @@ export default function AppPage() {
                         </div>
                     )}
                 </div>
-            </main>
-        </div>
+            </main >
+        </div >
     );
 }
