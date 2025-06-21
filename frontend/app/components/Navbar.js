@@ -80,6 +80,17 @@ export default function Navbar() {
                                 {user?.name?.charAt(0) || user?.email?.charAt(0) || 'F'}
                             </span>
                         </div>
+                        {user && (
+                            <button
+                                className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                                onClick={async () => {
+                                    await fetch('/api/auth/session', { method: 'DELETE' });
+                                    window.location.href = '/login';
+                                }}
+                            >
+                                Logout
+                            </button>
+                        )}
                     </div>
 
                     {/* Mobile menu button */}

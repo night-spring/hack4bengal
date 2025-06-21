@@ -116,6 +116,18 @@ export default function AppPage() {
                 ageOfWaste: geminiResponse.ageOfWaste || '',
             };
 
+            // Fix: If Gemini returns 0 or missing estimatedValue, set a fallback value
+            let estimatedValue = geminiResponse.estimatedValue;
+            if (!estimatedValue || estimatedValue === 0) {
+                // Fallback: set a default price based on crop type
+                const defaultPrices = {
+                    Rice: 1850,
+                    Wheat: 2200,
+                    Sugarcane: 1500,
+                };
+                estimatedValue = defaultPrices[geminiResponse.cropType] || 1200;
+            }
+
             // Update form data with Gemini's analysis
             setFormData(prev => ({
                 ...prev,
@@ -127,7 +139,7 @@ export default function AppPage() {
                 cropType: geminiResponse.cropType,
                 confidence: geminiResponse.confidence,
                 moistureLevel: geminiResponse.moistureLevel,
-                estimatedValue: geminiResponse.estimatedValue
+                estimatedValue // Use the fixed value
             });
 
             setStep(2);

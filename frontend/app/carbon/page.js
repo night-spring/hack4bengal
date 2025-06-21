@@ -3,99 +3,55 @@ import { useState, useEffect } from 'react';
 import { FiCloud, FiTarget, FiCreditCard, FiActivity, FiRefreshCw, FiZap, FiBarChart2 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import { getWasteListingsByUser } from '../actions/mongodbfunctions';
+import { useUser } from '@civic/auth/react';
+
 export default function CO2WalletPage() {
+  const { user } = useUser();
   const [walletData, setWalletData] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock data with 1 ton CO2 = 1 token calculation
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockWallet = {
-        totalCO2: 12560, // in kg
-        totalTokens: Math.round(12560 / 1000), // 1 token per 1000kg (1 ton)
-        equivalent: "12.56 tons",
-        impact: "Equivalent to 500 trees planted",
-        level: "Eco Champion",
-        progress: 75,
-        nextLevel: "Earth Guardian",
-        nextLevelTokens: Math.round(2000 / 1000), // tokens needed for next level
-        lastMonthCO2: 3450,
-        lastMonthTokens: Math.round(3450 / 1000)
-      };
-
-      const mockTransactions = [
-        { 
-          id: 1, 
-          type: 'waste_sale', 
-          action: 'Sold Rice Straw', 
-          co2: 850, 
-          tokens: Math.round(850 / 1000 * 10) / 10, // Round to 1 decimal
-          date: '2023-12-15', 
-          status: 'completed' 
-        },
-        { 
-          id: 2, 
-          type: 'waste_sale', 
-          action: 'Sold Wheat Straw', 
-          co2: 650, 
-          tokens: Math.round(650 / 1000 * 10) / 10,
-          date: '2023-12-10', 
-          status: 'completed' 
-        },
-        { 
-          id: 3, 
-          type: 'energy_saving', 
-          action: 'Solar Energy Usage', 
-          co2: 1200, 
-          tokens: Math.round(1200 / 1000 * 10) / 10,
-          date: '2023-12-05', 
-          status: 'completed' 
-        },
-        { 
-          id: 4, 
-          type: 'recycling', 
-          action: 'Composted Organic Waste', 
-          co2: 420, 
-          tokens: Math.round(420 / 1000 * 10) / 10,
-          date: '2023-11-28', 
-          status: 'completed' 
-        },
-        { 
-          id: 5, 
-          type: 'transport', 
-          action: 'Used Electric Vehicle', 
-          co2: 780, 
-          tokens: Math.round(780 / 1000 * 10) / 10,
-          date: '2023-11-22', 
-          status: 'completed' 
-        },
-        { 
-          id: 6, 
-          type: 'renewable', 
-          action: 'Installed Rainwater Harvesting', 
-          co2: 1500, 
-          tokens: Math.round(1500 / 1000 * 10) / 10,
-          date: '2023-11-15', 
-          status: 'completed' 
-        },
-        { 
-          id: 7, 
-          type: 'waste_sale', 
-          action: 'Sold Sugarcane Bagasse', 
-          co2: 2100, 
-          tokens: Math.round(2100 / 1000 * 10) / 10,
-          date: '2023-11-10', 
-          status: 'pending' 
-        },
-      ];
-
-      setWalletData(mockWallet);
-      setTransactions(mockTransactions);
+    if (!user?.id) return;
+    setLoading(true);
+    getWasteListingsByUser(user.id).then((wasteListings) => {
+      // Calculate total CO2 saved (sum of all listings' quantity in tons)
+      // FIX: include all listings, not just completed
+      const totalCO2 = wasteListings.reduce((sum, item) => {
+        // Convert to kg if needed
+        const qty = parseFloat(item.quantity) || 0;
+        const unit = item.quantityUnit || 'kg';
+        return sum + (unit === 'ton' ? qty * 1000 : qty);
+      }, 0);
+      const totalTokens = Math.round(totalCO2 / 1000); // 1 token per ton
+      // Transactions: map each listing to a transaction
+      const txs = wasteListings.map((item, idx) => ({
+        id: item._id.toString(),
+        type: 'waste_sale',
+        action: item.cropType ? `Sold ${item.cropType}` : 'Sold Waste',
+        co2: (item.quantityUnit === 'ton' ? parseFloat(item.quantity) * 1000 : parseFloat(item.quantity)) || 0,
+        tokens: ((item.quantityUnit === 'ton' ? parseFloat(item.quantity) * 1000 : parseFloat(item.quantity)) / 1000).toFixed(2),
+        date: item.createdAt || new Date().toISOString(),
+        status: item.status
+      }));
+      // Wallet summary
+      setWalletData({
+        totalCO2,
+        totalTokens,
+        equivalent: `${(totalCO2 / 1000).toFixed(2)} tons`,
+        impact: `Equivalent to ${Math.round(totalCO2 / 25)} trees planted`,
+        level: totalTokens > 10 ? 'Eco Champion' : 'Green Starter',
+        progress: Math.min(100, Math.round((totalTokens / 20) * 100)),
+        nextLevel: totalTokens > 10 ? 'Earth Guardian' : 'Eco Champion',
+        nextLevelTokens: totalTokens > 10 ? 20 - totalTokens : 10 - totalTokens,
+        lastMonthCO2: 0, // You can add logic for last month if needed
+        lastMonthTokens: 0
+      });
+      setTransactions(txs);
       setLoading(false);
-    }, 1500);
-  }, []);
+    });
+  }, [user?.id]);
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
