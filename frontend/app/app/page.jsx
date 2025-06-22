@@ -286,8 +286,8 @@ export default function AppPage() {
                                     <>
                                         {preview ? (
                                             <div className="relative" data-aos="zoom-in">
-                                                <Image
-
+                                                <Image height={64}
+                                                    width="100%"
                                                     src={preview}
                                                     alt="Waste preview"
                                                     className="h-64 w-full object-cover rounded-lg border-2 border-dashed border-green-300"
