@@ -1,66 +1,125 @@
-import time
-import os
-import certifi
 import asyncio
+import os
+import time
+from dotenv import load_dotenv
+from typing import Optional
+
+import aiohttp
 from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.async_client import FaucetClient, RestClient
+from aptos_sdk.async_client import RestClient
 from aptos_sdk.transactions import EntryFunction, TransactionPayload, TransactionArgument
 from aptos_sdk.bcs import Serializer
 
-# Fix SSL_CERT_FILE for httpx
-os.environ["SSL_CERT_FILE"] = certifi.where()
+# Load environment variables
+load_dotenv()
+os.environ.pop("SSL_CERT_FILE", None)
 
-# --- CONFIGURATION ---
-NODE_URL = "https://fullnode.devnet.aptoslabs.com/v1"
-FAUCET_URL = "https://faucet.devnet.aptoslabs.com"
+NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1"
+FAUCET_URL = "https://faucet.testnet.aptoslabs.com"
+PRIVATE_KEY_HEX = os.getenv("PETRA_PRIVATE_KEY_HEX")
+MODULE_ADDRESS = os.getenv("APTOS_ACCOUNT_ADDRESS")
 
-# Create a fresh account
-account = Account.generate()
-MODULE_ADDRESS = account.address()
-PRIVATE_KEY_HEX = account.private_key.hex()
+MIN_REQUIRED_BALANCE = 100_000  # 0.001 APT
+FUNDING_AMOUNT = 100_000_000  # 1 APT in Octas
 
-# --- CLIENT SETUP ---
-rest_client = RestClient(NODE_URL)
-faucet_client = FaucetClient(FAUCET_URL, rest_client)
+async def fund_account_from_faucet(address: str) -> bool:
+    """Informs user to manually fund account since faucet now requires JWT."""
+    print("❌ Faucet funding from backend is no longer supported.")
+    print("🔗 Please fund the account manually using: https://faucet.aptoslabs.com")
+    print(f"➡️ Address: 0x{address}")
+    return False
 
-print(f"✅ Using Aptos account: {account.address()}")
 
-# --- MINT CO₂ TOKEN (no balance check) ---
-async def mint_co2_token(farmer_address, kg_saved, action_desc):
-    payload = EntryFunction.natural(
+
+async def get_account_balance(address: str) -> Optional[int]:
+    """Check account balance."""
+    url = f"{NODE_URL}/accounts/{address}/resource/0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.status == 404:
+                    return None
+                data = await resp.json()
+                return int(data["data"]["coin"]["value"])
+    except Exception as e:
+        print(f"❌ Error checking balance: {e}")
+        return None
+
+
+
+
+async def wait_for_account_created(address: str, timeout: int = 30) -> bool:
+    """Wait until account appears on-chain."""
+    start = time.time()
+    while time.time() - start < timeout:
+        if await get_account_balance(address) is not None:
+            return True
+        await asyncio.sleep(1)
+    return False
+
+
+async def main():
+    if not PRIVATE_KEY_HEX or not MODULE_ADDRESS:
+        raise EnvironmentError("❌ Missing PETRA_PRIVATE_KEY_HEX or APTOS_ACCOUNT_ADDRESS in .env")
+
+    rest_client = RestClient(NODE_URL)
+    farmer = Account.load_key(PRIVATE_KEY_HEX)
+    address = str(farmer.address())
+    print(f"👛 Petra wallet address: {address}")
+
+    balance = await get_account_balance(address)
+
+    if balance is None:
+        print("🆕 Account not found. Funding from faucet...")
+        if not await fund_account_from_faucet(address):
+            return
+        print("⏳ Waiting for account to appear on-chain...")
+        if not await wait_for_account_created(address):
+            print("❌ Account not created after 30 seconds.")
+            return
+        balance = await get_account_balance(address)
+
+    print(f"💰 Current balance: {balance} Octas")
+    if balance < MIN_REQUIRED_BALANCE:
+        print(f"⚠️ Insufficient balance. Needed: {MIN_REQUIRED_BALANCE}, Found: {balance}")
+        return
+
+    # Token mint data
+    kg_saved = 100
+    description = "biogas from cow dung"
+    timestamp = int(time.time())
+
+    entry_function = EntryFunction.natural(
         f"{MODULE_ADDRESS}::co2_credit",
         "mint_token",
         [],
         [
-            TransactionArgument(AccountAddress.from_str(farmer_address), Serializer.struct),
-            TransactionArgument(int(kg_saved), Serializer.u64),
-            TransactionArgument(action_desc, Serializer.str),
-            TransactionArgument(int(time.time()), Serializer.u64),
+            TransactionArgument(kg_saved, Serializer.u64),
+            TransactionArgument(description, Serializer.str),
+            TransactionArgument(timestamp, Serializer.u64),
         ]
     )
+
     try:
-        txn_payload = TransactionPayload(payload)
-        signed_txn = await rest_client.create_bcs_signed_transaction(account, txn_payload)
-        txn_hash = await rest_client.submit_bcs_transaction(signed_txn)
-        await rest_client.wait_for_transaction(txn_hash)
-        print(f"✅ Token minted! Tx hash: {txn_hash}")
-        return txn_hash
+        sequence_number = int((await rest_client.account(farmer.address()))["sequence_number"])
+        signed_txn = await rest_client.create_bcs_signed_transaction(
+            farmer,
+            TransactionPayload(entry_function),
+            sequence_number=sequence_number,
+        )
+
+        tx_hash = await rest_client.submit_bcs_transaction(signed_txn)
+        print(f"📤 Transaction submitted: {tx_hash}")
+        await rest_client.wait_for_transaction(tx_hash)
+        txn = await rest_client.transaction_by_hash(tx_hash)
+
+        if txn["success"]:
+            print("✅ Transaction successful!")
+        else:
+            print(f"❌ Transaction failed:\nVM Status: {txn['vm_status']}\nFull txn: {txn}")
     except Exception as e:
-        print(f"❌ Error minting token: {e}")
-        return None
+        print(f"❌ Error during transaction: {e}")
 
-# --- MAIN ---
-async def main():
-    # Fund only once for devnet
-    await faucet_client.fund_account(account.address(), 100_000_000)
-    farmer = Account.generate()
-    farmer_address= farmer.address()
-    print(f"Using farmer address: {farmer_address}")
-    await mint_co2_token(
-        farmer_address= farmer_address,
-        kg_saved=100,
-        action_desc="Planted 100 trees"
-    )
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
