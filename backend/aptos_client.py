@@ -10,26 +10,15 @@ from aptos_sdk.async_client import RestClient
 from aptos_sdk.transactions import EntryFunction, TransactionPayload, TransactionArgument
 from aptos_sdk.bcs import Serializer
 
-# Load environment variables
+# Load .env variables
 load_dotenv()
 os.environ.pop("SSL_CERT_FILE", None)
 
 NODE_URL = "https://fullnode.testnet.aptoslabs.com/v1"
-FAUCET_URL = "https://faucet.testnet.aptoslabs.com"
 PRIVATE_KEY_HEX = os.getenv("PETRA_PRIVATE_KEY_HEX")
 MODULE_ADDRESS = os.getenv("APTOS_ACCOUNT_ADDRESS")
 
-MIN_REQUIRED_BALANCE = 100_000  # 0.001 APT
-FUNDING_AMOUNT = 100_000_000  # 1 APT in Octas
-
-async def fund_account_from_faucet(address: str) -> bool:
-    """Informs user to manually fund account since faucet now requires JWT."""
-    print("❌ Faucet funding from backend is no longer supported.")
-    print("🔗 Please fund the account manually using: https://faucet.aptoslabs.com")
-    print(f"➡️ Address: 0x{address}")
-    return False
-
-
+MIN_REQUIRED_BALANCE = 100_000  # 0.001 APT in Octas
 
 async def get_account_balance(address: str) -> Optional[int]:
     """Check account balance."""
@@ -41,50 +30,38 @@ async def get_account_balance(address: str) -> Optional[int]:
                     return None
                 data = await resp.json()
                 return int(data["data"]["coin"]["value"])
-    except Exception as e:
-        print(f"❌ Error checking balance: {e}")
+    except Exception:
         return None
 
-
-
-
-async def wait_for_account_created(address: str, timeout: int = 30) -> bool:
-    """Wait until account appears on-chain."""
+async def wait_for_funding(address: str, min_balance: int, timeout: int = 60):
+    """Wait for the account to have minimum balance."""
+    print(f"🔄 Waiting for funding. Required balance: {min_balance} Octas")
     start = time.time()
     while time.time() - start < timeout:
-        if await get_account_balance(address) is not None:
+        balance = await get_account_balance(address)
+        if balance is not None and balance >= min_balance:
             return True
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
     return False
-
 
 async def main():
     if not PRIVATE_KEY_HEX or not MODULE_ADDRESS:
-        raise EnvironmentError("❌ Missing PETRA_PRIVATE_KEY_HEX or APTOS_ACCOUNT_ADDRESS in .env")
+        raise EnvironmentError("Missing PETRA_PRIVATE_KEY_HEX or APTOS_ACCOUNT_ADDRESS in .env")
 
     rest_client = RestClient(NODE_URL)
-    farmer = Account.load_key(PRIVATE_KEY_HEX)
-    address = str(farmer.address())
-    print(f"👛 Petra wallet address: {address}")
+    sender = Account.load_key(PRIVATE_KEY_HEX)
+    sender_address = str(sender.address())
 
-    balance = await get_account_balance(address)
-
-    if balance is None:
-        print("🆕 Account not found. Funding from faucet...")
-        if not await fund_account_from_faucet(address):
+    balance = await get_account_balance(sender_address)
+    if balance is None or balance < MIN_REQUIRED_BALANCE:
+        print("🪙 Account not found or balance too low.")
+        print("👉 Please fund the account manually using the testnet faucet:")
+        print(f"🔗 https://faucet.aptoslabs.com")
+        print(f"📬 Wallet Address: {sender_address}")
+        if not await wait_for_funding(sender_address, MIN_REQUIRED_BALANCE):
+            print("❌ Funding not detected. Exiting.")
             return
-        print("⏳ Waiting for account to appear on-chain...")
-        if not await wait_for_account_created(address):
-            print("❌ Account not created after 30 seconds.")
-            return
-        balance = await get_account_balance(address)
 
-    print(f"💰 Current balance: {balance} Octas")
-    if balance < MIN_REQUIRED_BALANCE:
-        print(f"⚠️ Insufficient balance. Needed: {MIN_REQUIRED_BALANCE}, Found: {balance}")
-        return
-
-    # Token mint data
     kg_saved = 100
     description = "biogas from cow dung"
     timestamp = int(time.time())
@@ -100,26 +77,15 @@ async def main():
         ]
     )
 
-    try:
-        sequence_number = int((await rest_client.account(farmer.address()))["sequence_number"])
-        signed_txn = await rest_client.create_bcs_signed_transaction(
-            farmer,
-            TransactionPayload(entry_function),
-            sequence_number=sequence_number,
-        )
+    sequence_number = int((await rest_client.account(sender.address()))["sequence_number"])
+    txn = await rest_client.create_bcs_signed_transaction(
+        sender,
+        TransactionPayload(entry_function),
+        sequence_number=sequence_number,
+    )
 
-        tx_hash = await rest_client.submit_bcs_transaction(signed_txn)
-        print(f"📤 Transaction submitted: {tx_hash}")
-        await rest_client.wait_for_transaction(tx_hash)
-        txn = await rest_client.transaction_by_hash(tx_hash)
-
-        if txn["success"]:
-            print("✅ Transaction successful!")
-        else:
-            print(f"❌ Transaction failed:\nVM Status: {txn['vm_status']}\nFull txn: {txn}")
-    except Exception as e:
-        print(f"❌ Error during transaction: {e}")
-
+    tx_hash = await rest_client.submit_bcs_transaction(txn)
+    await rest_client.wait_for_transaction(tx_hash)
 
 if __name__ == "__main__":
     asyncio.run(main())

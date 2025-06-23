@@ -1,1 +1,17 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# dotenv
 .env
+.env.*
+
+# Aptos Move build artifacts
+build/
+move.toml
+
+# Aptos CLI
+.aptos/
+
+# Virtual environments
+venv/
+.venv/

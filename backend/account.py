@@ -1,32 +1,78 @@
-import requests
+from aptos_sdk.account_address import AccountAddress
+from aptos_sdk.account import Account
+from aptos_sdk.async_client import RestClient, FaucetClient
+from aptos_sdk.transactions import EntryFunction, TransactionPayload, TransactionArgument
+from aptos_sdk.bcs import Serializer
+from aptos_sdk.type_tag import StructTag, TypeTag
+from aptos_sdk import ed25519 
+from dotenv import load_dotenv
+import time
+import os
+import asyncio
+import json
 
-BASE_URL = "https://fullnode.testnet.aptoslabs.com/v1"
+os.environ.pop("SSL_CERT_FILE", None)
+load_dotenv()
+NODE_URL = "https://fullnode.devnet.aptoslabs.com/v1"
+FAUCET_URL = "https://faucet.devnet.aptoslabs.com"
 
-def get_account_info(address):
-    url = f"{BASE_URL}/accounts/{address}"
-    resp = requests.get(url)
-    if resp.status_code == 404:
-        print(f"Address {address} not found on-chain (no activity).")
-        return None
-    resp.raise_for_status()
-    return resp.json()
+rest_client = RestClient(NODE_URL)
+faucet_client = FaucetClient(FAUCET_URL, rest_client)
 
-def get_account_resources(address):
-    url = f"{BASE_URL}/accounts/{address}/resources"
-    resp = requests.get(url)
-    if resp.status_code == 404:
-        print(f"No resources found for {address} (might be inactive).")
-        return None
-    resp.raise_for_status()
-    return resp.json()
+PETRA_PRIVATE_KEY = os.getenv("PETRA_PRIVATE_KEY")
+print(PETRA_PRIVATE_KEY)
 
-# Replace with your address
-wallet_address = "0x2c0ecb595b32eddf16ea1733154969f212d1f1cd8aa3d2d0fb65ae90d09ffad4"
+admin = Account.load_key(PETRA_PRIVATE_KEY)
+print(f"Admin address: {admin.address()}")
 
-info = get_account_info(wallet_address)
-if info:
-    print("✅ Account Info:", info)
-    resources = get_account_resources(wallet_address)
-    print("✅ Resources:", resources)
-else:
-    print("Please verify the address or check using the Aptos Explorer.")
+farmer_private_key = os.getenv("FARMER_PRIVATE_KEY")
+farmer = Account.load_key(farmer_private_key)
+print(f"Farmer address: {farmer.address()}")
+
+address_serializer = getattr(Serializer, 'account_address', Serializer.struct)
+vector_u8_serializer = Serializer.sequence_serializer(Serializer.u8)
+
+async def reward(kg_saved, description, timestamp):
+    payload = EntryFunction.natural(
+        f"{admin.address()}::co2token",
+        "mint_token",
+        [
+        TypeTag(
+            StructTag(
+                address=PETRA_PRIVATE_KEY,
+                module="co2token",
+                name="CO2Token",
+                type_args=[]
+                )
+            )
+        ],
+        [
+            TransactionArgument(farmer.address(), address_serializer),
+            TransactionArgument(kg_saved, Serializer.u64),
+            TransactionArgument(description.encode(), vector_u8_serializer),  
+            TransactionArgument(timestamp, Serializer.u64),
+        ]
+    )
+
+    signed_txn = await rest_client.create_bcs_signed_transaction(admin, TransactionPayload(payload))
+    txn_hash = await rest_client.submit_bcs_transaction(signed_txn)
+    txn_result = await rest_client.wait_for_transaction(txn_hash)
+    print(txn_result["vm_status"])
+
+
+async def main():
+    admin_balance = await rest_client.account_balance(admin.address())
+    print(f"Admin balance: {admin_balance}")
+
+    farmer_balance = await rest_client.account_balance(farmer.address())
+    print(f"Farmer balance: {farmer_balance}")
+
+    await reward(100, "biogas from cow dung", int(time.time()))
+    farmer_balance = await rest_client.account_balance(farmer.address())
+    print(f"Farmer balance: {farmer_balance}")
+    
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
