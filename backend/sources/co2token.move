@@ -30,7 +30,7 @@ module carbon::co2token {
         timestamp: u64
     ) acquires TokenRegistry {
         let token = CO2Token { kg: kg_saved, description, timestamp };
-        let registry = borrow_global_mut<TokenRegistry>(signer::address_of(admin));
+        let registry = borrow_global_mut<TokenRegistry>(recipient);
 
         if (!table::contains(&registry.tokens, recipient)) {
             table::add(&mut registry.tokens, recipient, vector::empty<CO2Token>());
