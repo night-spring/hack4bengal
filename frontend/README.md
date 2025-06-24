@@ -104,7 +104,7 @@ Deploy easily on <a href="https://vercel.com/">Vercel</a> or your preferred plat
 
 ## 📸 Screenshots
 
-| Home (Desktop) | Marketplace | Portfolio (Mobile) |
+| Home | Marketplace | Portfolio |
 |---|---|---|
 | ![Home](./public/screenshot-home.png) | ![Marketplace](./public/screenshot-market.png) | ![Portfolio](./public/screenshot-portfolio-mobile.png) |
 
