@@ -1,7 +1,18 @@
 import { createCivicAuthPlugin } from "@civic/auth/nextjs"
 
 const nextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      }
+    ],
+  },
 };
 
 const withCivicAuth = createCivicAuthPlugin({

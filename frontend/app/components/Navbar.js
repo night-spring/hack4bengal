@@ -82,13 +82,13 @@ export default function Navbar() {
                         </div>
                         {user && (
                             <button
-                                className="ml-2 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                                className="relative overflow-hidden group inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-green-800 bg-green-300 hover:bg-green-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 ml-2"
                                 onClick={async () => {
                                     await fetch('/api/auth/session', { method: 'DELETE' });
                                     window.location.href = '/login';
                                 }}
                             >
-                                Logout
+                                Log Out
                             </button>
                         )}
                     </div>

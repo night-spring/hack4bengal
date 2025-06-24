@@ -133,10 +133,10 @@ export default function Home() {
         </div>
         <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
           <Image
-            height={56}
-            width="100%"
+            height={600}
+            width={800}
             className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full lg:object-contain lg:object-right"
-            src="https://earth.org/wp-content/uploads/2022/03/Untitled-design-2022-03-18T144807.712.jpg"
+            src="/pic.jpg"
             alt="Farmer using AgriLink app"
             data-aos="fade-left"
             data-aos-delay="300"
