@@ -32,7 +32,7 @@ aptos move test
 
 After running the above command, you should see output similar to:
 
-![Move test output](outputs/images/test_move.png)
+![Move test output](outputs/test_move.png)
 
 ### Build Move module
 ```bash
@@ -70,7 +70,7 @@ python account.py
 
 After running the above command, you should see output similar to:
 
-![Python main.py output](outputs/images/main_py.png)
+![Python main.py output](outputs/main_py.png)
 
 ---
 
