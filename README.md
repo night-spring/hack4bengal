@@ -164,28 +164,30 @@ python main.py
 
 <div align="center" style="margin:2.5rem 0 2rem 0;">
   <h2 style="font-size:2rem; font-weight:800; color:#14532d; margin-bottom:0.5rem;">Meet the Developers</h2>
-  <div style="display:flex; justify-content:center; gap:2.5rem; flex-wrap:wrap;">
-    <div style="background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); padding:1.2rem 1.5rem; width:200px; text-align:center;">
-      <img src="https://github.com/night-spring.png" alt="Dev1" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
-      <div style="font-weight:700; color:#14532d;">Debojit Roy</div>
-      <div style="color:#64748b; font-size:0.95rem;">Backend & Blockchain</div>
-    </div>
-    <div style="background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); padding:1.2rem 1.5rem; width:200px; text-align:center;">
-      <img src="https://github.com/Anish-2005.png" alt="Dev2" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
-      <div style="font-weight:700; color:#14532d;">Anish Seth</div>
-      <div style="color:#64748b; font-size:0.95rem;">Frontend & UI/UX</div>
-    </div>
-    <div style="background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); padding:1.2rem 1.5rem; width:200px; text-align:center;">
-      <img src="https://github.com/abhraneeldhar7.png" alt="Dev3" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
-      <div style="font-weight:700; color:#14532d;">Abhraneel Dhar</div>
-      <div style="color:#64748b; font-size:0.95rem;">Full Stack & API</div>
-    </div>
-    <div style="background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); padding:1.2rem 1.5rem; width:200px; text-align:center;">
-      <img src="https://github.com/Ayush-Devs.png" alt="Dev4" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
-      <div style="font-weight:700; color:#14532d;">Ayush Agarwal</div>
-      <div style="color:#64748b; font-size:0.95rem;">AI & Data</div>
-    </div>
-  </div>
+  <table style="border:none; background:none; margin:auto;">
+    <tr>
+      <td style="padding:1.2rem 1.5rem; background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); text-align:center; width:200px;">
+        <img src="https://github.com/night-spring.png" alt="Dev1" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
+        <div style="font-weight:700; color:#14532d;">Debojit Roy</div>
+        <div style="color:#64748b; font-size:0.95rem;">Backend & Blockchain</div>
+      </td>
+      <td style="padding:1.2rem 1.5rem; background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); text-align:center; width:200px;">
+        <img src="https://github.com/Anish-2005.png" alt="Dev2" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
+        <div style="font-weight:700; color:#14532d;">Anish Seth</div>
+        <div style="color:#64748b; font-size:0.95rem;">Frontend & UI/UX</div>
+      </td>
+      <td style="padding:1.2rem 1.5rem; background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); text-align:center; width:200px;">
+        <img src="https://github.com/abhraneeldhar7.png" alt="Dev3" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
+        <div style="font-weight:700; color:#14532d;">Abhraneel Dhar</div>
+        <div style="color:#64748b; font-size:0.95rem;">Full Stack & API</div>
+      </td>
+      <td style="padding:1.2rem 1.5rem; background:#fff; border-radius:1rem; box-shadow:0 2px 8px 0 rgba(16,185,129,0.08); text-align:center; width:200px;">
+        <img src="https://github.com/Ayush-Devs.png" alt="Dev4" style="border-radius:50%; width:80px; height:80px; margin-bottom:0.5rem; border:3px solid #16a34a;"/>
+        <div style="font-weight:700; color:#14532d;">Ayush Agarwal</div>
+        <div style="color:#64748b; font-size:0.95rem;">AI & Data</div>
+      </td>
+    </tr>
+  </table>
 </div>
 
 ---
