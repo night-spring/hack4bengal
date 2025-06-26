@@ -59,6 +59,7 @@ yarn install
    ```
 2. <b>Set up environment variables:</b>
    - Create a <code>.env.local</code> file in the <code>frontend</code> directory with your API keys and MongoDB connection string.
+   - MONGO_CS, NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL, GEMINI_API_KEY
 3. <b>Run the development server:</b>
    ```bash
    npm run dev
